@@ -30,7 +30,7 @@ export default class ConfigPanel extends Component {
         <div className="panel-body">
           <div className="row">
             <div className="col-md-1">
-              <h4>Source:</h4> 
+              <h4>Source:</h4>
             </div>
             <div className="col-md-2">
               <div className="radio">

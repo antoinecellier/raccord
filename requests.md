@@ -141,7 +141,7 @@
       ["stations", {from, length}, "lines", {length: 20}, "label"],
       ["stations", "favorites", {from, length}, ["code", "label"]],
       ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
-      ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label"]],
+      ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label", "distance"]],
       ["stations", "close", 47.213663, -1.556547, {from, length}, "lines", {length: 20}, "label"],
     ]
     ```
@@ -152,7 +152,8 @@
   closeStations(latitude, longitude, from, length) {
     code
     label
-    lines { label }
+    lines { label },
+    distance
   }
   favoriteStations(from, length) {
     code

@@ -179,3 +179,22 @@
 
 - REST
   - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&line&from&length`, `GET /stops/{stopId}`
+
+- Falcor
+  - Écran des passages
+  ```js
+  [
+    ["stops", "following", stopId, line, {from, length}, ["station", "direction", "line"], "label"],
+    ["stops", "following", stopId, line, {from, length}, "time"],
+  ]
+  ```
+- GraphQL
+  - Écran de la ligne
+  ```graphql
+  stops(following, line, from, length) {
+    station { label }
+    direction { label }
+    line { label }
+    time
+  }
+  ```

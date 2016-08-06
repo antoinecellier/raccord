@@ -181,7 +181,7 @@
   - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&line&from&length`, `GET /stops/{stopId}`
 
 - Falcor
-  - Écran des passages
+  - Écran de la ligne
   ```js
   [
     ["stops", "following", stopId, line, {from, length}, ["station", "direction", "line"], "label"],

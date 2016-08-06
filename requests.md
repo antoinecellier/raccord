@@ -96,14 +96,14 @@
   - Mettre un arrêt en favoris: `setValue(["stations", stationId, "favorite"], true)`
   - Retirer un arrêt en favoris: `setValue(["stations", stationId, "favorite"], false)`
   - Écran des arrêts
-    ```js
-    [
-      ["stations", {from, length}, ["code", "label"]],
-      ["stations", {from, length}, "lines", {length: 20}, "label"],
-      ["stations", "favorites", {from, length}, ["code", "label"]],
-      ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
-    ]
-    ```
+  ```js
+  [
+    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
+  ]
+  ```
 
 - GraphQL
   - Mettre un arrêt en favoris
@@ -135,16 +135,16 @@
 
 - Falcor
   - Écran des arrêts
-    ```js
-    [
-      ["stations", {from, length}, ["code", "label"]],
-      ["stations", {from, length}, "lines", {length: 20}, "label"],
-      ["stations", "favorites", {from, length}, ["code", "label"]],
-      ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
-      ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label", "distance"]],
-      ["stations", "close", 47.213663, -1.556547, {from, length}, "lines", {length: 20}, "label"],
-    ]
-    ```
+  ```js
+  [
+    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label", "distance"]],
+    ["stations", "close", 47.213663, -1.556547, {from, length}, "lines", {length: 20}, "label"],
+  ]
+  ```
 
 - GraphQL
   - Écran des arrêts
@@ -165,6 +165,7 @@
     label
     lines { label }
   }
+  ```
 
 # Je veux pouvoir filtrer les prochaines passages par ligne
 

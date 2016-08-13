@@ -184,7 +184,7 @@
   - Écran de la ligne
   ```js
   [
-    ["stops", "following", stopId, line, {from, length}, ["station", "direction", "line"], "label"],
+    ["stops", "following", stopId, line, {from, length}, ["station", "direction"], "label"],
     ["stops", "following", stopId, line, {from, length}, "time"],
   ]
   ```
@@ -194,7 +194,6 @@
   stops(following, line, from, length) {
     station { label }
     direction { label }
-    line { label }
     time
   }
   ```

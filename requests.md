@@ -43,6 +43,12 @@
 
 # Je veux que la liste des arrêts affichent les lignes qui passent à chaque arrêt
 
+- REST
+  - Écran des arrêts : + `GET /routes/{routeId}`
+
+- RPC
+  - Écran des arrêts : même requête mais modification du serveur pour envoyer plus de données
+
 - Falcor
   - Écran des arrêts
   ```js
@@ -51,6 +57,7 @@
     ["stations", {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
+
 - GraphQL
   - Écran des arrêts
   ```graphql
@@ -128,7 +135,47 @@
   }
   ```
 
-# Je veux avoir les arrêts les plus proches de moi en premier
+# Je veux afficher les 3 prochains passages aux arrêts favoris directement dans la liste des arrêts
+
+- REST
+  - Écran des arrêts : + `GET /stops?stationId&after&from=0&length=3`, `GET /stops/{stopId}`
+
+- RPC
+  - Écran des arrêts : même requête mais modification du serveur pour envoyer plus de données
+
+- Falcor
+  - Écran des arrêts
+  ```js
+  [
+    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, "routes", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, "stops", after, {from: 0, length: 3}, "route", "label"],
+    ["stations", "favorites", {from, length}, "stops", after, {from: 0, length: 3}, "time"],
+  ]
+  ```
+
+- GraphQL
+  - Écran des arrêts
+  ```graphql
+  favoriteStations(from, length) {
+    code
+    label
+    routes { label }
+    stops(after, from: 0, length: 3) {
+      route { label }
+      time
+    }
+  }
+  stations(search, from, length) {
+    code
+    label
+    routes { label }
+  }
+  ```
+
+# Je veux avoir un accès rapide aux arrêts les plus proches de moi
 
 - REST
   - Écran des arrêts : +`GET /stations?latitude&longitude&from&length`
@@ -167,33 +214,52 @@
   }
   ```
 
-# Je veux pouvoir filtrer les prochaines passages par ligne
-
-- REST
-  - Écran des passages : `GET /stops?stationId&route&after&from&length`
-
-- Falcor TODO
-- GraphQL TODO
-
 # Pour un arrêt et un passage donné, je veux voir quand est-ce que j’arriverais à ma destination qui se trouve plus loin sur la même ligne (un écran liste les prochains arrêts avec l’heure d’arrivée)
 
 - REST
-  - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&route&from&length`, `GET /stops/{stopId}`
+  - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&from&length`, `GET /stops/{stopId}`
 
 - Falcor
   - Écran de la ligne
   ```js
   [
-    ["stops", "following", stopId, route, {from, length}, ["station", "direction"], "label"],
-    ["stops", "following", stopId, route, {from, length}, "time"],
+    ["stops", "following", stopId, {from, length}, ["station", "direction"], "label"],
+    ["stops", "following", stopId, {from, length}, "time"],
   ]
   ```
+
 - GraphQL
   - Écran de la ligne
   ```graphql
-  stops(following, route, from, length) {
+  stops(following: stopId, from, length) {
     station { label }
     direction { label }
     time
+  }
+  ```
+
+# Correspondances (lignes et heures)
+
+- Falcor
+  - Écran de la ligne
+  ```js
+  [
+    ["stops", "following", stopId, {from, length}, ["station", "direction"], "label"],
+    ["stops", "following", stopId, {from, length}, "time"],
+    ["stops", "following", stopId, {from, length}, "transfers", {from, length}, "route", "label"],
+    ["stops", "following", stopId, {from, length}, "transfers", {from, length}, "time"],
+  ]
+  ```
+
+- GraphQL
+  - Écran de la ligne
+  ```graphql
+  stops(following: stopId, from, length) {
+    time
+    direction { label }
+    transfers(from, length) {
+      route { label }
+      time
+    }
   }
   ```

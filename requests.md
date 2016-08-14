@@ -214,7 +214,7 @@
   }
   ```
 
-# Pour un arrêt et un passage donné, je veux voir quand est-ce que j’arriverais à ma destination qui se trouve plus loin sur la même ligne (un écran liste les prochains arrêts avec l’heure d’arrivée)
+# Quand je clique sur un passage, je veux voir quand j’arriverais à ma destination qui se trouve plus loin sur la même ligne (un écran liste les prochains arrêts avec l’heure d’arrivée)
 
 - REST
   - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&from&length`, `GET /stops/{stopId}`
@@ -223,7 +223,10 @@
   - Écran de la ligne
   ```js
   [
-    ["stops", "following", stopId, {from, length}, ["station", "direction"], "label"],
+    ["stops", stopId, "station", "label"],
+    ["stops", stopId, "route", "label"],
+    ["stops", stopId, "time"],
+    ["stops", "following", stopId, {from, length}, "station", "label"],
     ["stops", "following", stopId, {from, length}, "time"],
   ]
   ```
@@ -231,20 +234,30 @@
 - GraphQL
   - Écran de la ligne
   ```graphql
+  stops(id: stopId) {
+    station { label }
+    route { label }
+    time
+  }
   stops(following: stopId, from, length) {
     station { label }
-    direction { label }
     time
   }
   ```
 
-# Correspondances (lignes et heures)
+# Je veux voir les prochaines correspondances en plus de l'heure d'arrivée
+
+- REST
+  - Écran de la ligne : + `GET /stops/{stopId}/transfers?from&length`, `GET /stops/{stopId}`
 
 - Falcor
   - Écran de la ligne
   ```js
   [
-    ["stops", "following", stopId, {from, length}, ["station", "direction"], "label"],
+    ["stops", stopId, "station", "label"],
+    ["stops", stopId, "route", "label"],
+    ["stops", stopId, "time"],
+    ["stops", "following", stopId, {from, length}, "station", "label"],
     ["stops", "following", stopId, {from, length}, "time"],
     ["stops", "following", stopId, {from, length}, "transfers", {from, length}, "route", "label"],
     ["stops", "following", stopId, {from, length}, "transfers", {from, length}, "time"],
@@ -254,9 +267,14 @@
 - GraphQL
   - Écran de la ligne
   ```graphql
-  stops(following: stopId, from, length) {
+  stops(id: stopId) {
+    station { label }
+    route { label }
     time
-    direction { label }
+  }
+  stops(following: stopId, from, length) {
+    station { label }
+    time
     transfers(from, length) {
       route { label }
       time

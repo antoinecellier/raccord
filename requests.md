@@ -18,7 +18,7 @@
   - Écran des passages
   ```js
   [
-    ["stops", stationId, after, {from, length}, ["station", "direction", "line"], "label"],
+    ["stops", stationId, after, {from, length}, ["station", "direction", "route"], "label"],
     ["stops", stationId, after, {from, length}, "time"],
   ]
   ```
@@ -36,7 +36,7 @@
   stops(stationId, after, from, length) {
     station { label }
     direction { label }
-    line { label }
+    route { label }
     time
   }
   ```
@@ -48,7 +48,7 @@
   ```js
   [
     ["stations", {from, length}, ["code", "label"]],
-    ["stations", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
 - GraphQL
@@ -57,7 +57,7 @@
   stations(stationId, from, length) {
     code
     label
-    lines { label }
+    routes { label }
   }
   ```
 
@@ -71,7 +71,7 @@
   ```js
   [
     ["stations", "search", query, ["code", "label"]],
-    ["stations", "search", query, "lines", {length: 20}, "label"],
+    ["stations", "search", query, "routes", {length: 20}, "label"],
   ]
   ```
 
@@ -81,7 +81,7 @@
   stations(search: query) {
     code
     label
-    lines { label }
+    routes { label }
   }
   ```
 
@@ -99,9 +99,9 @@
   ```js
   [
     ["stations", {from, length}, ["code", "label"]],
-    ["stations", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", {from, length}, "routes", {length: 20}, "label"],
     ["stations", "favorites", {from, length}, ["code", "label"]],
-    ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
 
@@ -119,12 +119,12 @@
   favoriteStations(from, length) {
     code
     label
-    lines { label }
+    routes { label }
   }
   stations(search, from, length) {
     code
     label
-    lines { label }
+    routes { label }
   }
   ```
 
@@ -138,11 +138,11 @@
   ```js
   [
     ["stations", {from, length}, ["code", "label"]],
-    ["stations", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", {from, length}, "routes", {length: 20}, "label"],
     ["stations", "favorites", {from, length}, ["code", "label"]],
-    ["stations", "favorites", {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
     ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label", "distance"]],
-    ["stations", "close", 47.213663, -1.556547, {from, length}, "lines", {length: 20}, "label"],
+    ["stations", "close", 47.213663, -1.556547, {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
 
@@ -152,25 +152,25 @@
   closeStations(latitude, longitude, from, length) {
     code
     label
-    lines { label },
+    routes { label },
     distance
   }
   favoriteStations(from, length) {
     code
     label
-    lines { label }
+    routes { label }
   }
   stations(search, from, length) {
     code
     label
-    lines { label }
+    routes { label }
   }
   ```
 
 # Je veux pouvoir filtrer les prochaines passages par ligne
 
 - REST
-  - Écran des passages : `GET /stops?stationId&line&after&from&length`
+  - Écran des passages : `GET /stops?stationId&route&after&from&length`
 
 - Falcor TODO
 - GraphQL TODO
@@ -178,20 +178,20 @@
 # Pour un arrêt et un passage donné, je veux voir quand est-ce que j’arriverais à ma destination qui se trouve plus loin sur la même ligne (un écran liste les prochains arrêts avec l’heure d’arrivée)
 
 - REST
-  - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&line&from&length`, `GET /stops/{stopId}`
+  - Écran de la ligne : `GET /stations/{stationId}`, `GET /stops?following=stopId&route&from&length`, `GET /stops/{stopId}`
 
 - Falcor
   - Écran de la ligne
   ```js
   [
-    ["stops", "following", stopId, line, {from, length}, ["station", "direction"], "label"],
-    ["stops", "following", stopId, line, {from, length}, "time"],
+    ["stops", "following", stopId, route, {from, length}, ["station", "direction"], "label"],
+    ["stops", "following", stopId, route, {from, length}, "time"],
   ]
   ```
 - GraphQL
   - Écran de la ligne
   ```graphql
-  stops(following, line, from, length) {
+  stops(following, route, from, length) {
     station { label }
     direction { label }
     time

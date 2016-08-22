@@ -135,7 +135,7 @@
   }
   ```
 
-# Je veux afficher les 3 prochains passages aux arrêts favoris directement dans la liste des arrêts
+# Sur tablette seulement, je veux afficher les 3 prochains passages aux arrêts favoris directement dans la liste des arrêts
 
 - REST
   - Écran des arrêts : + `GET /stops?stationId&after&from=0&length=3`, `GET /stops/{stopId}`
@@ -245,7 +245,7 @@
   }
   ```
 
-# Je veux voir les prochaines correspondances en plus de l'heure d'arrivée
+# Sur tablette seulement, je veux voir les prochaines correspondances en plus de l'heure d'arrivée
 
 - REST
   - Écran de la ligne : + `GET /stops/{stopId}/transfers?from&length`, `GET /stops/{stopId}`

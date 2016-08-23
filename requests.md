@@ -116,11 +116,17 @@
 - GraphQL
   - Mettre un arrêt en favoris
   ```graphql
-  addFavorite(stationId)
+  addFavorite(stationId) {
+    id
+    label
+  }
   ```
   - Retirer un arrêt des favoris
   ```graphql
-  removeFavorite(stationId)
+  removeFavorite(stationId) {
+    id
+    label
+  }
   ```
   - Écran des arrêts
   ```graphql

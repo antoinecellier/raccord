@@ -12,14 +12,14 @@
   - Écran des arrêts
   ```js
   [
-    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, ["id", "label"]],
   ]
   ```
   - Écran des passages
   ```js
   [
     ["stops", stationId, after, {from, length}, ["station", "direction", "route"], "label"],
-    ["stops", stationId, after, {from, length}, "time"],
+    ["stops", stationId, after, {from, length}, ["id", "time"]],
   ]
   ```
 
@@ -27,13 +27,14 @@
   - Écran des arrêts
   ```graphql
   stations(from, length) {
-    code
+    id
     label
   }
   ```
   - Écran des passages
   ```graphql
   stops(stationId, after, from, length) {
+    id
     station { label }
     direction { label }
     route { label }
@@ -53,7 +54,7 @@
   - Écran des arrêts
   ```js
   [
-    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, ["id", "label"]],
     ["stations", {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
@@ -62,7 +63,7 @@
   - Écran des arrêts
   ```graphql
   stations(stationId, from, length) {
-    code
+    id
     label
     routes { label }
   }
@@ -77,7 +78,7 @@
   - Recherche d'arrêts
   ```js
   [
-    ["stations", "search", query, ["code", "label"]],
+    ["stations", "search", query, ["id", "label"]],
     ["stations", "search", query, "routes", {length: 20}, "label"],
   ]
   ```
@@ -86,7 +87,7 @@
   - Recherche d'arrêts
   ```graphql
   stations(search: query) {
-    code
+    id
     label
     routes { label }
   }
@@ -105,9 +106,9 @@
   - Écran des arrêts
   ```js
   [
-    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, ["id", "label"]],
     ["stations", {from, length}, "routes", {length: 20}, "label"],
-    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, ["id", "label"]],
     ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
@@ -124,12 +125,12 @@
   - Écran des arrêts
   ```graphql
   favoriteStations(from, length) {
-    code
+    id
     label
     routes { label }
   }
   stations(search, from, length) {
-    code
+    id
     label
     routes { label }
   }
@@ -147,9 +148,9 @@
   - Écran des arrêts
   ```js
   [
-    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, ["id", "label"]],
     ["stations", {from, length}, "routes", {length: 20}, "label"],
-    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, ["id", "label"]],
     ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
     ["stations", "favorites", {from, length}, "stops", after, {from: 0, length: 3}, "route", "label"],
     ["stations", "favorites", {from, length}, "stops", after, {from: 0, length: 3}, "time"],
@@ -160,7 +161,7 @@
   - Écran des arrêts
   ```graphql
   favoriteStations(from, length) {
-    code
+    id
     label
     routes { label }
     stops(after, from: 0, length: 3) {
@@ -169,7 +170,7 @@
     }
   }
   stations(search, from, length) {
-    code
+    id
     label
     routes { label }
   }
@@ -184,11 +185,11 @@
   - Écran des arrêts
   ```js
   [
-    ["stations", {from, length}, ["code", "label"]],
+    ["stations", {from, length}, ["id", "label"]],
     ["stations", {from, length}, "routes", {length: 20}, "label"],
-    ["stations", "favorites", {from, length}, ["code", "label"]],
+    ["stations", "favorites", {from, length}, ["id", "label"]],
     ["stations", "favorites", {from, length}, "routes", {length: 20}, "label"],
-    ["stations", "close", 47.213663, -1.556547, {from, length}, ["code", "label", "distance"]],
+    ["stations", "close", 47.213663, -1.556547, {from, length}, ["id", "label", "distance"]],
     ["stations", "close", 47.213663, -1.556547, {from, length}, "routes", {length: 20}, "label"],
   ]
   ```
@@ -197,18 +198,18 @@
   - Écran des arrêts
   ```graphql
   closeStations(latitude, longitude, from, length) {
-    code
+    id
     label
     routes { label },
     distance
   }
   favoriteStations(from, length) {
-    code
+    id
     label
     routes { label }
   }
   stations(search, from, length) {
-    code
+    id
     label
     routes { label }
   }

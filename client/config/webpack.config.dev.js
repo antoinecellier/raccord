@@ -35,7 +35,7 @@ module.exports = {
     publicPath: '/'
   },
   resolve: {
-    extensions: ['', '.js'],
+    extensions: ['', '.js', '.css'],
   },
   resolveLoader: {
     root: nodeModulesPath,
@@ -58,7 +58,6 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        include: srcPath,
         loader: 'style!css!postcss'
       },
       {

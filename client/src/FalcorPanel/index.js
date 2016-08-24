@@ -13,7 +13,6 @@ export default class FalcorPanel extends Component {
   }
 
   render() {
-    console.log(this.state.request);
     return (
       <div className="col-md-6">
         Falcor

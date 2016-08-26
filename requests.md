@@ -8,6 +8,15 @@
   - Écran des arrêts : `GET /stations?from&length`
   - Écran des passages : `GET /stops?stationId&after&from&length`
 
+- AQL
+  - Écran des passages: 
+    ```
+    FOR st IN stop_times
+    FILTER st.stop_id == '{stationId}'
+    LIMIT {from}, {length}
+    RETURN st
+    ```
+
 - Falcor
   - Écran des arrêts
   ```js

@@ -9,6 +9,12 @@
   - Écran des passages : `GET /stops?stationId&after&from&length`
 
 - AQL
+- Écran des arrêts: 
+    ```
+    FOR t IN stops
+    LIMIT {from}, {length}
+    RETURN t
+    ```
   - Écran des passages: 
     ```
     FOR st IN stop_times

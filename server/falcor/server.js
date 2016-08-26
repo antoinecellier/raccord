@@ -7,5 +7,5 @@ export default port => {
     .get(`/${endpoint}`, (req, res) => res.send('Hello Falcor'))
     .listen(port)
 
-  console.log(`Falcor server running on http://localhost:${port}/${endpoint}`);
+  console.log(`Falcor server running on http://localhost:${port}/${endpoint}`)
 }

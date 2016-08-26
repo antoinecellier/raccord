@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint client/src/{,**/}*.js server/**/*.js populate-db/*.js"
+    "lint": "eslint client/src/{,**/}*.js server/**/*.js populate-db/*.js",
+    "lint-fix": "eslint --fix client/src/{,**/}*.js server/**/*.js populate-db/*.js"
   },
   "repository": {
     "type": "git",

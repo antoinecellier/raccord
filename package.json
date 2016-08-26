@@ -1,0 +1,26 @@
+{
+  "name": "raccord",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint client/src/{,**/}*.js server/**/*.js populate-db/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antoinecellier/raccord.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/antoinecellier/raccord/issues"
+  },
+  "homepage": "https://github.com/antoinecellier/raccord#readme",
+  "devDependencies": {
+    "eslint": "^3.3.1",
+    "eslint-config-standard": "^6.0.0",
+    "eslint-plugin-promise": "^2.0.1",
+    "eslint-plugin-standard": "^2.0.0"
+  }
+}

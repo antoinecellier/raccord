@@ -3,5 +3,12 @@
     "es6": true,
     "node": true
   },
-  "extends": "standard"
+  "parserOptions": {
+    "ecmaVersion": 7,
+    "sourceType": "module"
+  },
+  "extends": "standard",
+  "rules": {
+    "generator-star-spacing": ["error", "after"]
+  }
 }

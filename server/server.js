@@ -2,34 +2,16 @@ import fs from 'fs'
 import http from 'http'
 import spdy from 'spdy'
 import express from 'express'
-import ArangoError from 'arangojs/lib/error'
 import rest from './rest'
+import errorHandlers from './error-handlers'
 
 export default (port) => {
   const handler = express()
     .get('/', (req, res) => res.send("It's working!"))
     .use('/rest', rest)
-    .use(function (err, req, res, next) {
-      if (err.isJoi) res.status(400).json(err)
-      else next(err)
-    })
-    .use(function (err, req, res, next) {
-      if (err.isBoom) res.status(err.output.statusCode).json(err.output)
-      else next(err)
-    })
-    .use(function (err, req, res, next) {
-      if (err instanceof ArangoError && err.code) {
-        console.log(err)
-        res.status(err.code).json({
-          error: true,
-          isArango: true,
-          name: 'DatabaseError',
-          message: err.message,
-          code: err.code,
-          errorNum: err.errorNum
-        })
-      } else next(err)
-    })
+    .use(errorHandlers.joi)
+    .use(errorHandlers.boom)
+    .use(errorHandlers.arango)
 
   http.createServer(handler).listen(port, err => {
     if (err) throw err

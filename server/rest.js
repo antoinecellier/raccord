@@ -10,6 +10,10 @@ const paginationSchema = joi.object().keys({
   length: joi.number().positive().default(10)
 })
 
+const stationsSearch = joi.object().keys({
+  search: joi.string().default('')
+}).concat(paginationSchema)
+
 const stopByStationIdParametersSchema = joi.object().keys({
   stationId: joi.string().required(),
   after: joi.string().isoDate().required()
@@ -27,9 +31,9 @@ export default express.Router()
   })
 
   .get('/stations', co(function* (req, res) {
-    const {from, length} = joi.attempt(req.query, paginationSchema)
+    const {search, from, length} = joi.attempt(req.query, stationsSearch)
     const cursor = yield db().query(aql`
-      for stop in stops
+      for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
       filter stop.location_type == 1
       limit ${from}, ${length}
       return stop.stop_id

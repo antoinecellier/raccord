@@ -168,7 +168,7 @@ function stopDtoId ({trip_id, stop_sequence}) {
   return `stops/${trip_id}/${stop_sequence}` // eslint-disable-line camelcase
 }
 
-function stopDto ({_key, departure_time, stop_id, stop_sequence, trip_id}) {
+function stopDto ({trip_id, stop_sequence, departure_time}) {
   return {
     href: stopDtoId({trip_id, stop_sequence}),
     time: departure_time

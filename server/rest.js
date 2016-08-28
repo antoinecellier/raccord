@@ -89,6 +89,7 @@ function validatePagination (from, length, res) {
     res.status(400).json(boom.badRequest('from and length must be valid positive integers', {from, length}))
     return false
   }
+  return true
 }
 
 function evolve (obj, transforms) {

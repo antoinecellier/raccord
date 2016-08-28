@@ -43,7 +43,7 @@ export default express.Router()
     if (!after.isValid()) return res.status(400).json(boom.badRequest('after must be a valid ISO date time', {after}))
     if (!validatePagination(from, length, res)) return
 
-    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][after.isoWeekday()]
+    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][after.isoWeekday() - 1]
     const afterDay = parseInt(after.format('YYYYMMDD'))
     const afterTime = after.format('HH:mm:ss')
 

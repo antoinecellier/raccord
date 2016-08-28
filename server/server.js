@@ -5,7 +5,7 @@ import express from 'express'
 import rest from './rest'
 import errorHandlers from './error-handlers'
 
-export default (port) => {
+export default port => {
   const handler = express()
     .get('/', (req, res) => res.send("It's working!"))
     .use('/rest', rest)

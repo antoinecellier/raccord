@@ -3,6 +3,7 @@ import db, {aql} from './db'
 import co from 'co-express'
 import moment from 'moment'
 import joi from 'joi'
+import boom from 'boom'
 
 const paginationSchema = joi.object().keys({
   from: joi.number().positive().default(0),
@@ -14,9 +15,10 @@ const stopByStationIdParametersSchema = joi.object().keys({
   after: joi.string().isoDate().required()
 }).concat(paginationSchema)
 
-const routeByStationIdParametersSchema = joi.object().keys({
-  stationId: joi.string().required(),
-}).concat(paginationSchema)
+const stopsByTripIdAndStopOrderSchema = joi.object().keys({
+  tripId: joi.string().required(),
+  stopOrder: joi.number().required()
+})
 
 export default express.Router()
 
@@ -27,16 +29,41 @@ export default express.Router()
   .get('/stations', co(function* (req, res) {
     const {from, length} = joi.attempt(req.query, paginationSchema)
     const cursor = yield db().query(aql`
-      FOR stop IN stops
-      FILTER stop.location_type == 1
-      LIMIT ${from}, ${length}
-      RETURN stop._key
+      for stop in stops
+      filter stop.location_type == 1
+      limit ${from}, ${length}
+      return stop.stop_id
     `)
-    const stations = yield cursor.all()
+    const stations = yield cursor.map(stationDtoId)
     res.json(stations)
   }))
 
-  .get('/stations/:id', findByIdIn('stops'))
+  .get('/stations/:id', co(function* (req, res) {
+    const id = req.params.id
+    const cursor = yield db().query(aql`
+      let children_stops = (
+        for stop in stops
+        filter stop.parent_station == ${stationDbId(id)}
+        return stop.stop_id)
+
+      let connected_trips = (
+        for stop_time in stop_times
+        filter stop_time.stop_id in children_stops
+        return stop_time.trip_id)
+
+      let connected_routes = unique(
+        for trip in trips
+        filter trip.trip_id in connected_trips
+        return trip.route_id)
+
+      for stop in stops
+      filter stop.stop_id == ${stationDbId(id)}
+      return {stop: stop, routes: connected_routes}
+    `)
+    const station = yield cursor.next()
+    if (!station) throw boom.notFound()
+    res.json(stationDto(station))
+  }))
 
   .get('/stops', co(function* (req, res) {
     const {stationId, after, from, length} = joi.attempt(req.query, stopByStationIdParametersSchema)
@@ -47,7 +74,7 @@ export default express.Router()
     const afterTime = afterMoment.format('HH:mm:ss')
 
     const cursor = yield db().query(aql`
-      let station = document(${'stops/' + stationId})
+      let station = document(concat('stops/', ${stationId}))
 
       let active_services = (
         for service in calendar
@@ -59,58 +86,87 @@ export default express.Router()
         filter trip.service_id in active_services
         return trip.trip_id)
 
-      let substops = (
+      let children_stops = (
         for stop in stops
         filter stop.parent_station == station.stop_id
         return stop.stop_id)
 
       for stop_time in stop_times
-      filter stop_time.stop_id in substops && stop_time.trip_id in active_trips && stop_time.departure_time >= ${afterTime}
+      filter stop_time.stop_id in children_stops && stop_time.trip_id in active_trips && stop_time.departure_time >= ${afterTime}
       sort stop_time.departure_time
       limit ${from}, ${length}
-      return stop_time._key
+      return stop_time
     `)
-    const stops = yield cursor.all()
+    const stops = yield cursor.map(stopDtoId)
     res.json(stops)
   }))
 
-  .get('/stops/:id', findByIdIn('stop_times'))
-
-  .get('/routes', co(function* (req, res) {
-    const {stationId, from, length} = joi.attempt(req.query, routeByStationIdParametersSchema)
+  .get('/stops/:tripId/:stopOrder', co(function* (req, res) {
+    const {tripId, stopOrder} = joi.attempt(req.params, stopsByTripIdAndStopOrderSchema)
     const cursor = yield db().query(aql`
-      let station = document(${'stops/' + stationId})
-
-      let substops = (
-          for stop in stops
-          filter stop.parent_station == station.stop_id
-          return stop.stop_id)
-
-      let alltrips = (
-          for stop_time in stop_times
-          filter stop_time.stop_id in substops
-          return stop_time.trip_id)
-
-      let route_ids = unique(
-          for trip in trips
-          filter trip.trip_id in alltrips
-          return trip.route_id)
-
-      for route in routes
-      filter route.route_id in route_ids
-      limit ${from}, ${length}
-      return route._key
+      for stop_time in stop_times
+      filter stop_time.trip_id == ${tripId} && stop_time.stop_sequence == ${stopOrder}
+      return stop_time
     `)
-    const routes = yield cursor.all()
-    res.json(routes)
+    const stop = yield cursor.next()
+    if (!stop) throw boom.notFound()
+    res.json(stopDto(stop))
   }))
 
-  .get('/routes/:id', findByIdIn('routes'))
+  .get('/routes/:id', co(function* (req, res) {
+    const id = req.params.id
+    const cursor = yield db().query(aql`
+      for route in routes
+      filter route.route_id == ${routeDbId(id)}
+      return route
+    `)
+    const route = yield cursor.next()
+    if (!route) throw boom.notFound()
+    res.json(routeDto(route))
+  }))
 
 
+function stationDbId (stationDtoId) {
+  return 'StopArea:' + stationDtoId
+}
 
-function findByIdIn (collection) {
-  return co(function* (req, res) {
-    res.json(yield db().collection(collection).document(req.params.id))
-  })
+function stationDtoId (stopDbId) {
+  return 'stations/' + stopDbId.split(':')[1]
+}
+
+function stationDto ({stop: {stop_id, stop_name, stop_lat, stop_lon}, routes}) {
+  return {
+    href: stationDtoId(stop_id),
+    name: stop_name,
+    latitude: stop_lat,
+    longitude: stop_lon,
+    routes: routes.map(routeDtoId)
+  }
+}
+
+function routeDbId (routeDtoId) {
+  return `${routeDtoId}-0`
+}
+
+function routeDtoId (routeDbId) {
+  return 'routes/' + routeDbId.split('-')[0]
+}
+
+function routeDto ({route_id, route_short_name, route_long_name}) {
+  return {
+    href: routeDtoId(route_id),
+    shortName: String(route_short_name),
+    longName: route_long_name
+  }
+}
+
+function stopDtoId ({trip_id, stop_sequence}) {
+  return `stops/${trip_id}/${stop_sequence}` // eslint-disable-line camelcase
+}
+
+function stopDto ({_key, departure_time, stop_id, stop_sequence, trip_id}) {
+  return {
+    href: stopDtoId({trip_id, stop_sequence}),
+    time: departure_time
+  }
 }

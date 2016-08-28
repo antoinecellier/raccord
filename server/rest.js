@@ -5,19 +5,19 @@ import moment from 'moment'
 import joi from 'joi'
 import boom from 'boom'
 
-const paginationSchema = joi.object().keys({
+const paginationParametersSchema = joi.object().keys({
   from: joi.number().positive().default(0),
   length: joi.number().positive().default(10)
 })
 
-const stationsSearch = joi.object().keys({
+const stationsSearchParametersSchema = joi.object().keys({
   search: joi.string().default('')
-}).concat(paginationSchema)
+}).concat(paginationParametersSchema)
 
-const stopByStationIdParametersSchema = joi.object().keys({
+const stopsByStationIdParametersSchema = joi.object().keys({
   stationId: joi.string().required(),
   after: joi.string().isoDate().required()
-}).concat(paginationSchema)
+}).concat(paginationParametersSchema)
 
 const stopsByTripIdAndStopOrderSchema = joi.object().keys({
   tripId: joi.string().required(),
@@ -31,7 +31,7 @@ export default express.Router()
   })
 
   .get('/stations', co(function* (req, res) {
-    const {search, from, length} = joi.attempt(req.query, stationsSearch)
+    const {search, from, length} = joi.attempt(req.query, stationsSearchParametersSchema)
     const cursor = yield db().query(aql`
       for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
       filter stop.location_type == 1
@@ -70,7 +70,7 @@ export default express.Router()
   }))
 
   .get('/stops', co(function* (req, res) {
-    const {stationId, after, from, length} = joi.attempt(req.query, stopByStationIdParametersSchema)
+    const {stationId, after, from, length} = joi.attempt(req.query, stopsByStationIdParametersSchema)
 
     const afterMoment = moment(after)
     const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][afterMoment.isoWeekday() - 1]

@@ -26,14 +26,7 @@ export default express.Router()
     res.json(stations)
   }))
 
-  .get('/stations/:id', co.wrap(function* (req, res) {
-    try {
-      res.json(yield db().collection('stops').document(req.params.id))
-    } catch (err) {
-      if (err.code) return res.sendStatus(err.code)
-      else throw err
-    }
-  }))
+  .get('/stations/:id', findByIdIn('stops'))
 
   .get('/stops', co.wrap(function* (req, res) {
     const {stationId, after, from = 0, length = 10} = evolve(req.query, {
@@ -75,14 +68,18 @@ export default express.Router()
     res.json(stops)
   }))
 
-  .get('/stops/:id', co.wrap(function* (req, res) {
+  .get('/stops/:id', findByIdIn('stop_times'))
+
+function findByIdIn (collection) {
+  return co.wrap(function* (req, res) {
     try {
-      res.json(yield db().collection('stop_times').document(req.params.id))
+      res.json(yield db().collection(collection).document(req.params.id))
     } catch (err) {
       if (err.code) return res.sendStatus(err.code)
       else throw err
     }
-  }))
+  })
+}
 
 function validatePagination (from, length, res) {
   if (from < 0 || from !== 0 && !from || length < 0 || length !== 0 && !length) {

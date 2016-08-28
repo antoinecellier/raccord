@@ -8,6 +8,14 @@ export default (port) => {
   const handler = express()
     .get('/', (req, res) => res.send("It's working!"))
     .use('/rest', rest)
+    .use(function (err, req, res, next) {
+      if (err.isJoi) res.status(400).json(err)
+      else next(err)
+    })
+    .use(function (err, req, res, next) {
+      if (err.isBoom) res.status(err.output.statusCode).json(err.output)
+      else next(err)
+    })
 
   http.createServer(handler).listen(port, err => {
     if (err) throw err

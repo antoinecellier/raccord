@@ -1,8 +1,18 @@
 import express from 'express'
 import db, {aql} from './db'
-import co from 'co'
+import co from 'co-express'
 import moment from 'moment'
-import boom from 'boom'
+import joi from 'joi'
+
+const paginationSchema = joi.object().keys({
+  from: joi.number().positive().default(0),
+  length: joi.number().positive().default(10)
+})
+
+const stopByStationIdParametersSchema = joi.object().keys({
+  stationId: joi.string().required(),
+  after: joi.string().isoDate().required()
+}).concat(paginationSchema)
 
 export default express.Router()
 
@@ -10,12 +20,8 @@ export default express.Router()
     res.send('REST here!')
   })
 
-  .get('/stations', co.wrap(function* (req, res) {
-    const {from = 0, length = 10} = evolve(req.query, {
-      from: parseInt, length: parseInt
-    })
-    if (!validatePagination(from, length, res)) return
-
+  .get('/stations', co(function* (req, res) {
+    const {from, length} = joi.attempt(req.query, paginationSchema)
     const cursor = yield db().query(aql`
       FOR stop IN stops
       FILTER stop.location_type == 1
@@ -28,17 +34,13 @@ export default express.Router()
 
   .get('/stations/:id', findByIdIn('stops'))
 
-  .get('/stops', co.wrap(function* (req, res) {
-    const {stationId, after, from = 0, length = 10} = evolve(req.query, {
-      after: moment, from: parseInt, length: parseInt
-    })
-    if (!stationId || !after) return res.status(400).json(boom.badRequest('stationId and after are required', {stationId, after}))
-    if (!after.isValid()) return res.status(400).json(boom.badRequest('after must be a valid ISO date time', {after}))
-    if (!validatePagination(from, length, res)) return
+  .get('/stops', co(function* (req, res) {
+    const {stationId, after, from, length} = joi.attempt(req.query, stopByStationIdParametersSchema)
 
-    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][after.isoWeekday() - 1]
-    const afterDay = parseInt(after.format('YYYYMMDD'))
-    const afterTime = after.format('HH:mm:ss')
+    const afterMoment = moment(after)
+    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][afterMoment.isoWeekday() - 1]
+    const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
+    const afterTime = afterMoment.format('HH:mm:ss')
 
     const cursor = yield db().query(aql`
       let station = document(${'stops/' + stationId})
@@ -70,8 +72,10 @@ export default express.Router()
 
   .get('/stops/:id', findByIdIn('stop_times'))
 
+
+
 function findByIdIn (collection) {
-  return co.wrap(function* (req, res) {
+  return co(function* (req, res) {
     try {
       res.json(yield db().collection(collection).document(req.params.id))
     } catch (err) {
@@ -79,19 +83,4 @@ function findByIdIn (collection) {
       else throw err
     }
   })
-}
-
-function validatePagination (from, length, res) {
-  if (from < 0 || from !== 0 && !from || length < 0 || length !== 0 && !length) {
-    res.status(400).json(boom.badRequest('from and length must be valid positive integers', {from, length}))
-    return false
-  }
-  return true
-}
-
-function evolve (obj, transforms) {
-  return Object.keys(obj).reduce((evolved, prop) => {
-    const transform = transforms[prop] || (x => x)
-    return Object.assign(evolved, {[prop]: transform(obj[prop])})
-  }, {})
 }

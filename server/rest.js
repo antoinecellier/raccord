@@ -1,12 +1,15 @@
 import express from 'express'
 import db, {aql} from './db'
 import co from 'co'
+import moment from 'moment'
 import boom from 'boom'
 
 export default express.Router()
+
   .get('/', (req, res) => {
     res.send('REST here!')
   })
+
   .get('/stations', co.wrap(function* (req, res) {
     const {from = 0, length = 10} = evolve(req.query, {
       from: parseInt, length: parseInt
@@ -22,6 +25,7 @@ export default express.Router()
     const stations = yield cursor.all()
     res.json(stations)
   }))
+
   .get('/stations/:id', co.wrap(function* (req, res) {
     try {
       res.json(yield db().collection('stops').document(req.params.id))
@@ -30,6 +34,54 @@ export default express.Router()
       else throw err
     }
   }))
+
+  .get('/stops', co.wrap(function* (req, res) {
+    const {stationId, after, from = 0, length = 10} = evolve(req.query, {
+      after: moment, from: parseInt, length: parseInt
+    })
+    if (!stationId || !after) return res.status(400).json(boom.badRequest('stationId and after are required', {stationId, after}))
+    if (!after.isValid()) return res.status(400).json(boom.badRequest('after must be a valid ISO date time', {after}))
+    if (!validatePagination(from, length, res)) return
+
+    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][after.isoWeekday()]
+    const afterDay = parseInt(after.format('YYYYMMDD'))
+    const afterTime = after.format('HH:mm:ss')
+
+    const cursor = yield db().query(aql`
+      let station = document(${'stops/' + stationId})
+
+      let active_services = (
+        for service in calendar
+        filter service.${afterWeekday} == 1 && service.start_date <= ${afterDay} && service.end_date >= ${afterDay}
+        return service.service_id)
+
+      let active_trips = (
+        for trip in trips
+        filter trip.service_id in active_services
+        return trip.trip_id)
+
+      let substops = (
+        for stop in stops
+        filter stop.parent_station == station.stop_id
+        return stop.stop_id)
+
+      for stop_time in stop_times
+      filter stop_time.stop_id in substops && stop_time.trip_id in active_trips && stop_time.departure_time >= ${afterTime}
+      sort stop_time.departure_time
+      limit ${from}, ${length}
+      return stop_time._key
+    `)
+    const stops = yield cursor.all()
+    res.json(stops)
+  }))
+
+  .get('/stops/:id', co.wrap(function* (req, res) {
+    try {
+      res.json(yield db().collection('stop_times').document(req.params.id))
+    } catch (err) {
+      if (err.code) return res.sendStatus(err.code)
+      else throw err
+    }
   }))
 
 function validatePagination (from, length, res) {

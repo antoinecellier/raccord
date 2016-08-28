@@ -2,6 +2,7 @@ import fs from 'fs'
 import http from 'http'
 import spdy from 'spdy'
 import express from 'express'
+import ArangoError from 'arangojs/lib/error'
 import rest from './rest'
 
 export default (port) => {
@@ -15,6 +16,19 @@ export default (port) => {
     .use(function (err, req, res, next) {
       if (err.isBoom) res.status(err.output.statusCode).json(err.output)
       else next(err)
+    })
+    .use(function (err, req, res, next) {
+      if (err instanceof ArangoError && err.code) {
+        console.log(err)
+        res.status(err.code).json({
+          error: true,
+          isArango: true,
+          name: 'DatabaseError',
+          message: err.message,
+          code: err.code,
+          errorNum: err.errorNum
+        })
+      } else next(err)
     })
 
   http.createServer(handler).listen(port, err => {

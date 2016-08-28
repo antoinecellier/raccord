@@ -76,11 +76,6 @@ export default express.Router()
 
 function findByIdIn (collection) {
   return co(function* (req, res) {
-    try {
       res.json(yield db().collection(collection).document(req.params.id))
-    } catch (err) {
-      if (err.code) return res.sendStatus(err.code)
-      else throw err
-    }
   })
 }

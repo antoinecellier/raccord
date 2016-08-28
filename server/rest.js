@@ -14,6 +14,10 @@ const stopByStationIdParametersSchema = joi.object().keys({
   after: joi.string().isoDate().required()
 }).concat(paginationSchema)
 
+const routeByStationIdParametersSchema = joi.object().keys({
+  stationId: joi.string().required(),
+}).concat(paginationSchema)
+
 export default express.Router()
 
   .get('/', (req, res) => {
@@ -72,10 +76,41 @@ export default express.Router()
 
   .get('/stops/:id', findByIdIn('stop_times'))
 
+  .get('/routes', co(function* (req, res) {
+    const {stationId, from, length} = joi.attempt(req.query, routeByStationIdParametersSchema)
+    const cursor = yield db().query(aql`
+      let station = document(${'stops/' + stationId})
+
+      let substops = (
+          for stop in stops
+          filter stop.parent_station == station.stop_id
+          return stop.stop_id)
+
+      let alltrips = (
+          for stop_time in stop_times
+          filter stop_time.stop_id in substops
+          return stop_time.trip_id)
+
+      let route_ids = unique(
+          for trip in trips
+          filter trip.trip_id in alltrips
+          return trip.route_id)
+
+      for route in routes
+      filter route.route_id in route_ids
+      limit ${from}, ${length}
+      return route._key
+    `)
+    const routes = yield cursor.all()
+    res.json(routes)
+  }))
+
+  .get('/routes/:id', findByIdIn('routes'))
+
 
 
 function findByIdIn (collection) {
   return co(function* (req, res) {
-      res.json(yield db().collection(collection).document(req.params.id))
+    res.json(yield db().collection(collection).document(req.params.id))
   })
 }

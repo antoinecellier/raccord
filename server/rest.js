@@ -16,8 +16,8 @@ const stationsSearchParametersSchema = joi.object().keys({
   search: joi.string().default('')
 }).concat(paginationParametersSchema)
 
-const stopsByStationIdParametersSchema = joi.object().keys({
-  stationId: joi.string().required(),
+const stopsByStationParametersSchema = joi.object().keys({
+  station: joi.string().length(4).required(),
   after: joi.string().isoDate().required()
 }).concat(paginationParametersSchema)
 
@@ -78,7 +78,7 @@ export default express.Router()
   }))
 
   .get('/stops', co(function* (req, res) {
-    const {stationId, after, from, length} = joi.attempt(req.query, stopsByStationIdParametersSchema)
+    const {station, after, from, length} = joi.attempt(req.query, stopsByStationParametersSchema)
 
     const afterMoment = moment(after)
     const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][afterMoment.isoWeekday() - 1]
@@ -88,7 +88,7 @@ export default express.Router()
     const cursor = yield db().query(aql`
       let station = (
         for stop in stops
-        filter stop.stop_id == ${stationDbId(stationId)}
+        filter stop.stop_id == ${stationDbId(station)}
         return stop)[0]
 
       let active_services = (

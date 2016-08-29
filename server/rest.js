@@ -86,7 +86,10 @@ export default express.Router()
     const afterTime = afterMoment.format('HH:mm:ss')
 
     const cursor = yield db().query(aql`
-      let station = document(concat('stops/', ${stationId}))
+      let station = (
+        for stop in stops
+        filter stop.stop_id == ${stationDbId(stationId)}
+        return stop)[0]
 
       let active_services = (
         for service in calendar

@@ -21,7 +21,7 @@ export default class FalcorPanel extends Component {
           theme="github"
           name="falcor_editor"
           fontSize={15}
-          height={200}
+          height="8em"
           onChange={this.handleRequest}
           value={this.state.request}
           editorProps={{$blockScrolling: true}}

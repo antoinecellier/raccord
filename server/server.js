@@ -3,6 +3,7 @@ import http from 'http'
 import spdy from 'spdy'
 import express from 'express'
 import rest from './rest'
+import falcor from './falcor'
 import errorHandlers from './error-handlers'
 
 export default port => {
@@ -10,6 +11,7 @@ export default port => {
     .get('/', (req, res) => res.send("It's working!"))
     .get('/favicon.ico', (req, res) => res.sendStatus(204))
     .use('/rest', rest)
+    .use('/falcor', falcor)
     .use(errorHandlers.joi)
     .use(errorHandlers.boom)
     .use(errorHandlers.arango)

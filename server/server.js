@@ -8,6 +8,7 @@ import errorHandlers from './error-handlers'
 export default port => {
   const handler = express()
     .get('/', (req, res) => res.send("It's working!"))
+    .get('/favicon.ico', (req, res) => res.sendStatus(204))
     .use('/rest', rest)
     .use(errorHandlers.joi)
     .use(errorHandlers.boom)

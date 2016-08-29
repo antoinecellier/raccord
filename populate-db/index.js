@@ -2,15 +2,15 @@ const childProcess = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const sourceDir = process.argv[2] || '.'
-
-const arangoimpAdditionalArgs = process.argv.slice(3)
-const arangoimpPath = path.join(process.env.ARANGODB_HOME, 'bin', 'arangoimp')
-
-if (!arangoimpPath) {
+if (!process.env.ARANGODB_HOME) {
   console.error('ARANGODB_HOME is not defined. Please set ARANGODB_HOME to the installation directory of ArangoDB')
   process.exit()
 }
+
+const sourceDir = process.argv[2] || '.'
+const arangoimpAdditionalArgs = process.argv.slice(3)
+const arangoimpPath = path.join(process.env.ARANGODB_HOME, 'bin', 'arangoimp')
+
 
 const arangoimpDefaultArgs = filePath => [
   '--file', filePath,

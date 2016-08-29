@@ -1,35 +1,37 @@
-'use strict'
-
+const childProcess = require('child_process')
 const fs = require('fs')
 const path = require('path')
-const csvStream = require('csv-stream')
-const jsonStream = require('JSONStream')
-const request = require('request-promise')
+const createIndices = require('./create-indices')
 
-const sourceDir = __dirname
-const destDb = process.argv[2] || 'http://localhost:8529/_db/_system'
+if (!process.env.ARANGODB_HOME) {
+  console.error('ARANGODB_HOME is not defined. Please set ARANGODB_HOME to the installation directory of ArangoDB')
+  process.exit()
+}
 
-fs.readdirSync(sourceDir)
+const sourceDir = process.argv[2] || '.'
+const arangoimpAdditionalArgs = process.argv.slice(3)
+const arangoimpPath = path.join(process.env.ARANGODB_HOME, 'bin', 'arangoimp')
+
+
+const arangoimpDefaultArgs = filePath => [
+  '--file', filePath,
+  '--type', 'csv',
+  '--collection', path.basename(filePath, '.txt'),
+  '--create-collection', 'true',
+  '--overwrite',
+  '--server.password', '""']
+
+const files = fs.readdirSync(sourceDir)
   .map(fileName => path.join(sourceDir, fileName))
   .filter(filePath => path.extname(filePath) === '.txt')
-  .map(csvFilePath => [csvFilePath, path.join(sourceDir, path.basename(csvFilePath, '.txt') + '.json')])
-  .map(([csvFilePath, jsonFilePath]) => [jsonFilePath, convert(csvFilePath, jsonFilePath)])
-  .forEach(([jsonFilePath, stream]) => stream.on('finish', () => importInto(path.basename(jsonFilePath, '.json'), jsonFilePath)))
 
-function convert (pathIn, pathOut) {
-  console.log('converting:', path.basename(pathIn), '=>', path.basename(pathOut))
-  return fs.createReadStream(pathIn)
-    .pipe(csvStream.createStream({delimiter: ',', enclosedChar: '"'}))
-    .pipe(jsonStream.stringify('[\n', ',\n', '\n]\n'))
-    .pipe(fs.createWriteStream(pathOut))
-}
+console.log(`importing ${files.length} files`)
 
-function importInto (collection, jsonFilePath) {
-  console.log('importing into new collection:', path.basename(jsonFilePath), '=>', collection)
-  const documents = require(jsonFilePath)
-  request.delete(`${destDb}/_api/collection/${collection}`)
-    .catch(() => {}) // in case the collection does not exist
-    .then(() => request.post(`${destDb}/_api/collection`, {body: {name: collection}, json: true}))
-    .then(() => request.post(`${destDb}/_api/import?collection=${collection}&type=list`, {body: documents, json: true}))
-    .then(() => console.log('done:', collection))
-}
+files.forEach(filePath => childProcess.execFileSync(
+  arangoimpPath,
+  [...arangoimpDefaultArgs(filePath), ...arangoimpAdditionalArgs],
+  {stdio: ['ignore', 'ignore', 'pipe']}))
+
+console.log('done')
+
+createIndices()

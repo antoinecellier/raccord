@@ -1,6 +1,7 @@
 const childProcess = require('child_process')
 const fs = require('fs')
 const path = require('path')
+const createIndices = require('./create-indices')
 
 if (!process.env.ARANGODB_HOME) {
   console.error('ARANGODB_HOME is not defined. Please set ARANGODB_HOME to the installation directory of ArangoDB')
@@ -32,3 +33,5 @@ files.forEach(filePath => childProcess.execFileSync(
   {stdio: ['ignore', 'ignore', 'pipe']}))
 
 console.log('done')
+
+createIndices()

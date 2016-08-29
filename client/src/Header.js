@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
 export default class Header extends Component {
-  render() {
+  render () {
     return (
       <nav className="navbar navbar-inverse">
         <div className="container">
@@ -10,6 +10,6 @@ export default class Header extends Component {
           </div>
         </div>
       </nav>
-    );
+    )
   }
 }

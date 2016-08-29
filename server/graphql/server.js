@@ -4,12 +4,12 @@ import express from 'express'
 
 export class GraphQLServer {
 
-  constructor(port) {
+  constructor (port) {
     this.schema = this.defineSchema()
     this.runServer(port, this.schema)
   }
 
-  defineSchema() {
+  defineSchema () {
     return new GraphQLSchema({
       query: new GraphQLObjectType({
         name: 'Query',
@@ -17,21 +17,21 @@ export class GraphQLServer {
           raccord: {
             type: new GraphQLList(GraphQLString),
             resolve: () => {
-              return ["Hello Falcor", "Hello GraphQL"]
+              return ['Hello Falcor', 'Hello GraphQL']
             }
           }
         })
       })
-    });
+    })
   }
 
-  runServer(port, schema) {
+  runServer (port, schema) {
     let endpoint = 'graphql'
 
     express()
-      .use(`/${endpoint}`, graphqlHTTP({ schema , pretty: true}))
+      .use(`/${endpoint}`, graphqlHTTP({schema, pretty: true}))
       .listen(port)
 
-    console.log(`GraphQL server running on http://localhost:${port}/${endpoint}`);
+    console.log(`GraphQL server running on http://localhost:${port}/${endpoint}`)
   }
 };

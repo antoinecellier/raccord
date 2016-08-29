@@ -13,6 +13,7 @@
   
     ```aql
     FOR t IN stops
+    SORT t.stop_name ASC
     LIMIT {from}, {length}
     RETURN t
     ```

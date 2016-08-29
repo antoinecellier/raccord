@@ -5,6 +5,8 @@ import moment from 'moment'
 import joi from 'joi'
 import boom from 'boom'
 
+const dataExpiryDate = moment('2017-08-27T23:59:59+02:00')
+
 const paginationParametersSchema = joi.object().keys({
   from: joi.number().positive().default(0),
   length: joi.number().positive().default(10)
@@ -25,6 +27,12 @@ const stopsByTripIdAndStopOrderSchema = joi.object().keys({
 })
 
 export default express.Router()
+
+  .use((req, res, next) => {
+    const secondsToExpiry = dataExpiryDate.diff(moment(), 'seconds')
+    res.set('Cache-Control', `public, max-age=${secondsToExpiry}`)
+    return next()
+  })
 
   .get('/', (req, res) => {
     res.send('REST here!')

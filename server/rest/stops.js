@@ -23,7 +23,7 @@ export default express.Router()
     const {station, after, from, length} = joi.attempt(req.query, stopsByStationParametersSchema)
 
     const afterMoment = moment(after)
-    const afterWeekday = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][afterMoment.isoWeekday() - 1]
+    const afterWeekday = afterMoment.format('dddd').toLowerCase()
     const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
     const afterTime = afterMoment.format('HH:mm:ss')
 

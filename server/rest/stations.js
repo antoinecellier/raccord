@@ -17,6 +17,7 @@ export default express.Router()
     const cursor = yield db().query(aql`
       for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
       filter stop.location_type == 1
+      sort stop.stop_name asc
       limit ${from}, ${length}
       return stop.stop_id
     `)

@@ -52,9 +52,9 @@ const routes = [
 
           for route_id in connected_routes
           sort route_id asc
-          return {stationId: station_id, routeId: route_id}
+          return {stationId: station_id, routeId: route_id, index: position(connected_routes, route_id, true)}
       `)
-      return yield cursor.map(({stationId, routeId}, index) => ({
+      return yield cursor.map(({stationId, routeId, index}) => ({
         path: [stations, byId, stationDtoId(stationId), routes, index],
         value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
       }))

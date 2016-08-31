@@ -31,6 +31,36 @@ const routes = [
     })
   },
   {
+    route: 'stations.byId[{keys:ids}].routes[{ranges:indices}]',
+    get: co.wrap(function* ([stations, byId, ids, routes, indices]) {
+      const cursor = yield db().query(aql`
+        for station_id in ${ids.map(stationDbId)}
+          let children_stops = (
+            for stop in stops
+            filter stop.parent_station == station_id
+            return stop.stop_id)
+
+          let connected_trips = (
+            for stop_time in stop_times
+            filter stop_time.stop_id in children_stops
+            return stop_time.trip_id)
+
+          let connected_routes = unique(
+            for trip in trips
+            filter trip.trip_id in connected_trips
+            return trip.route_id)
+
+          for route_id in connected_routes
+          sort route_id asc
+          return {stationId: station_id, routeId: route_id}
+      `)
+      return yield cursor.map(({stationId, routeId}, index) => ({
+        path: [stations, byId, stationDtoId(stationId), routes, index],
+        value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
+      }))
+    })
+  },
+  {
     route: 'stations.byId[{keys:ids}][{keys:props}]',
     get: co.wrap(function* ([stations, byId, ids, props]) {
       const cursor = yield db().query(aql`
@@ -42,6 +72,21 @@ const routes = [
       return flatten(stationDtos.map(station => props.map(prop => ({
         path: [stations, byId, station.id, prop],
         value: defaultTo(station[prop], {$type: 'error', value: 'field does not exist'})
+      }))))
+    })
+  },
+  {
+    route: 'routes.byId[{keys:ids}][{keys:props}]',
+    get: co.wrap(function* ([routes, byId, ids, props]) {
+      const cursor = yield db().query(aql`
+        for route in routes
+        filter route.route_id in ${ids.map(routeDbId)}
+        return route
+      `)
+      const routeDtos = yield cursor.map(routeDto)
+      return flatten(routeDtos.map(route => props.map(prop => ({
+        path: [routes, byId, route.id, prop],
+        value: defaultTo(route[prop], {$type: 'error', value: 'field does not exist'})
       }))))
     })
   }
@@ -68,6 +113,22 @@ function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
     name: stop_name,
     latitude: stop_lat,
     longitude: stop_lon
+  }
+}
+
+function routeDbId (routeDtoId) {
+  return routeDtoId + '-0'
+}
+
+function routeDtoId (routeDbId) {
+  return routeDbId.split('-')[0]
+}
+
+function routeDto ({route_id, route_short_name, route_long_name}) {
+  return {
+    id: routeDtoId(route_id),
+    label: String(route_short_name),
+    description: route_long_name
   }
 }
 

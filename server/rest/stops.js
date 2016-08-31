@@ -28,11 +28,6 @@ export default express.Router()
     const afterTime = afterMoment.format('HH:mm:ss')
 
     const cursor = yield db().query(aql`
-      let station = (
-        for stop in stops
-        filter stop.stop_id == ${stationDbId(station)}
-        return stop)[0]
-
       let active_services = (
         for service in calendar
         filter service.${afterWeekday} == 1 && service.start_date <= ${afterDay} && service.end_date >= ${afterDay}
@@ -45,7 +40,7 @@ export default express.Router()
 
       let children_stops = (
         for stop in stops
-        filter stop.parent_station == station.stop_id
+        filter stop.parent_station == ${stationDbId(station)}
         return stop.stop_id)
 
       for stop_time in stop_times

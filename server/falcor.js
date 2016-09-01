@@ -32,7 +32,7 @@ const routes = [
   },
   {
     route: 'stations.byId[{keys:ids}].routes[{ranges:indices}]',
-    get: co.wrap(function* ([stations, byId, ids, routes, indices]) {
+    get: co.wrap(function* ([stations, byId, ids, routes, [{from, to}]]) {
       const cursor = yield db().query(aql`
         for station_id in ${ids.map(stationDbId)}
           let children_stops = (
@@ -49,15 +49,19 @@ const routes = [
             for trip in trips
             filter trip.trip_id in connected_trips
             return trip.route_id)
-
-          for route_id in connected_routes
-          sort route_id asc
-          return {stationId: station_id, routeId: route_id, index: position(connected_routes, route_id, true)}
+          
+          let route_ids = (
+            for route_id in connected_routes
+            sort route_id asc
+            limit ${from}, ${to - from + 1}
+            return route_id)
+          
+          return {stationId: station_id, routeIds: route_ids}
       `)
-      return yield cursor.map(({stationId, routeId, index}) => ({
+      return flatten(yield cursor.map(({stationId, routeIds}) => routeIds.map((routeId, index) => ({
         path: [stations, byId, stationDtoId(stationId), routes, index],
         value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
-      }))
+      }))))
     })
   },
   {

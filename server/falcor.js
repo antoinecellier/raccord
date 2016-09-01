@@ -58,14 +58,14 @@ const routes = [
             limit ${from}, ${to - from + 1}
             return route_id)
           
-          return {stationId: station_id, routeIds: route_ids}
+          return {stationId: station_id, routeIds: route_ids, routeCount: length(connected_routes)}
       `)
-      return flatten(yield cursor.map(({stationId, routeIds}) => routeIds.map((routeId, index) => ({
+      return flatten(yield cursor.map(({stationId, routeIds, routeCount}) => routeIds.map((routeId, index) => ({
         path: [stations, byId, stationDtoId(stationId), routes, index],
         value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
       })).concat({
         path: [stations, byId, stationDtoId(stationId), routes, 'length'],
-        value: routeIds.length
+        value: routeCount
       }).concat(Array(Math.max(0, to - routeIds.length + 1)).fill().map((zero, index) => ({
         path: [stations, byId, stationDtoId(stationId), routes, routeIds.length + index],
         value: {$type: 'atom'}

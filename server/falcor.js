@@ -2,6 +2,7 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import {dataSourceRoute as falcor} from 'falcor-express'
 import FalcorRouter from 'falcor-router'
+import ranges from 'falcor-router/src/operations/ranges/convertPathKeyToRange'
 import flatten from 'lodash.flatten'
 import co from 'co'
 import db, {aql} from './db'
@@ -31,8 +32,9 @@ const routes = [
     })
   },
   {
-    route: 'stations.byId[{keys:ids}].routes[{ranges:indices}]',
-    get: co.wrap(function* ([stations, byId, ids, routes, [{from, to}]]) {
+    route: 'stations.byId[{keys:ids}].routes[{keys}]',
+    get: co.wrap(function* ([stations, byId, ids, routes, keys]) {
+      const [{from, to} = {from: 0, to: -1}] = ranges(keys)
       const cursor = yield db().query(aql`
         for station_id in ${ids.map(stationDbId)}
           let children_stops = (
@@ -61,35 +63,13 @@ const routes = [
       return flatten(yield cursor.map(({stationId, routeIds}) => routeIds.map((routeId, index) => ({
         path: [stations, byId, stationDtoId(stationId), routes, index],
         value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
-      }))))
-    })
-  },
-  {
-    route: 'stations.byId[{keys:ids}].routes.length',
-    get: co.wrap(function* ([stations, byId, ids, routes, length]) {
-      const cursor = yield db().query(aql`
-        for station_id in ${ids.map(stationDbId)}
-          let children_stops = (
-            for stop in stops
-            filter stop.parent_station == station_id
-            return stop.stop_id)
-
-          let connected_trips = (
-            for stop_time in stop_times
-            filter stop_time.stop_id in children_stops
-            return stop_time.trip_id)
-
-          let connected_routes = unique(
-            for trip in trips
-            filter trip.trip_id in connected_trips
-            return trip.route_id)
-
-          return {stationId: station_id, numberOfRoutes: length(connected_routes)}
-      `)
-      return yield cursor.map(({stationId, numberOfRoutes}) => ({
-        path: [stations, byId, stationDtoId(stationId), routes, length],
-        value: numberOfRoutes
-      }))
+      })).concat({
+        path: [stations, byId, stationDtoId(stationId), routes, 'length'],
+        value: routeIds.length
+      }).concat(Array(Math.max(0, to - routeIds.length + 1)).fill().map((zero, index) => ({
+        path: [stations, byId, stationDtoId(stationId), routes, routeIds.length + index],
+        value: {$type: 'atom'}
+      })))))
     })
   },
   {
@@ -125,9 +105,7 @@ const routes = [
 ]
 
 export default express.Router()
-
   .use(bodyParser.urlencoded({extended: false}))
-
   .use('/', falcor(() => new FalcorRouter(routes)))
 
 

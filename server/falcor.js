@@ -65,6 +65,34 @@ const routes = [
     })
   },
   {
+    route: 'stations.byId[{keys:ids}].routes.length',
+    get: co.wrap(function* ([stations, byId, ids, routes, length]) {
+      const cursor = yield db().query(aql`
+        for station_id in ${ids.map(stationDbId)}
+          let children_stops = (
+            for stop in stops
+            filter stop.parent_station == station_id
+            return stop.stop_id)
+
+          let connected_trips = (
+            for stop_time in stop_times
+            filter stop_time.stop_id in children_stops
+            return stop_time.trip_id)
+
+          let connected_routes = unique(
+            for trip in trips
+            filter trip.trip_id in connected_trips
+            return trip.route_id)
+
+          return {stationId: station_id, numberOfRoutes: length(connected_routes)}
+      `)
+      return yield cursor.map(({stationId, numberOfRoutes}) => ({
+        path: [stations, byId, stationDtoId(stationId), routes, length],
+        value: numberOfRoutes
+      }))
+    })
+  },
+  {
     route: 'stations.byId[{keys:ids}][{keys:props}]',
     get: co.wrap(function* ([stations, byId, ids, props]) {
       const cursor = yield db().query(aql`

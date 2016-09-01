@@ -47,10 +47,10 @@ const routes = [
             filter stop_time.stop_id in children_stops
             return stop_time.trip_id)
 
-          let connected_routes = unique(
+          let connected_routes = (
             for trip in trips
             filter trip.trip_id in connected_trips
-            return trip.route_id)
+            return distinct trip.route_id)
           
           let route_ids = (
             for route_id in connected_routes

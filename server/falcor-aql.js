@@ -21,7 +21,9 @@ const stationPropertyMapping = {
 }
 
 const routePropertyMapping = {
-  id: 'route_id'
+  id: 'route_id',
+  label: 'route_short_name',
+  description: 'route_long_name'
 }
 
 const routes = [
@@ -49,18 +51,17 @@ const routes = [
   {
     route: 'routes.byId[{keys:ids}][{keys:props}]',
     get: function ([routes, byId, ids, props]) {
-      const propertyOf = prop => aqb.ref('roue').get(aqb.str(stationPropertyMapping[prop]))
-      const selector = props.reduce((selector, prop) => Object.assign(selector, {[stationPropertyMapping[prop]]: propertyOf(prop)}), {[stationPropertyMapping['id']]: propertyOf('id')})
-      const query = aqb.for('station').in('stops')
-        .filter(aqb.eq('station.location_type', 1))
-        .filter(aqb.in('station.stop_id', aqb.list(ids.map(stationDbId).map(aqb.str))))
+      const propertyOf = prop => aqb.ref('route').get(aqb.str(routePropertyMapping[prop]))
+      const selector = props.reduce((selector, prop) => Object.assign(selector, {[routePropertyMapping[prop]]: propertyOf(prop)}), {[routePropertyMapping['id']]: propertyOf('id')})
+      const query = aqb.for('route').in('routes')
+        .filter(aqb.in('route.stop_id', aqb.list(ids.map(routeDbId).map(aqb.str))))
         .return(aqb.obj(selector))
       console.log('route query', query.toAQL())
-      const mapper = stations => {
-        const dtos = stations.map(stationDto)
+      const mapper = routes => {
+        const dtos = routes.map(routeDto)
         return {
-          stations: {
-            byId: dtos.reduce((stationsById, station) => Object.assign(stationsById, {[station.id]: station}), {})
+          routes: {
+            byId: dtos.reduce((routesById, route) => Object.assign(routesById, {[route.id]: route}), {})
           }
         }
       }
@@ -117,5 +118,21 @@ function stationDto ({stop_id: stopId, stop_name, stop_lat, stop_lon}) {
     name: stop_name,
     latitude: stop_lat,
     longitude: stop_lon
+  }
+}
+
+function routeDbId (routeDtoId) {
+  return routeDtoId + '-0'
+}
+
+function routeDtoId (routeDbId) {
+  return routeDbId.split('-')[0]
+}
+
+function routeDto ({route_id, route_short_name, route_long_name}) {
+  return {
+    id: routeDtoId(route_id),
+    label: String(route_short_name),
+    description: route_long_name
   }
 }

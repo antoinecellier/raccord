@@ -6,11 +6,10 @@
     "start": "nodemon --debug index"
   },
   "dependencies": {
+    "aqb": "^2.1.0",
     "arangojs": "^5.0.3",
     "babel-core": "^6.14.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
-    "babel-preset-es2015": "^6.14.0",
-    "babel-preset-stage-0": "^6.5.0",
     "body-parser": "^1.15.2",
     "boom": "^4.0.0",
     "co": "^4.6.0",
@@ -21,7 +20,13 @@
     "http2": "^3.3.4",
     "joi": "^9.0.4",
     "lodash.flatten": "^4.4.0",
+    "lodash.get": "^4.4.2",
+    "lodash.merge": "^4.6.0",
+    "lodash.set": "^4.3.2",
+    "lodash.sortby": "^4.4.2",
     "moment": "^2.14.1",
+    "rx": "^2.3.25",
+    "shortid": "^2.2.6",
     "spdy": "^3.4.0"
   },
   "devDependencies": {

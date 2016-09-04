@@ -3,7 +3,7 @@ import http from 'http'
 import spdy from 'spdy'
 import express from 'express'
 import rest from './rest'
-import falcor from './falcor'
+import falcor from './falcor-aql'
 import errorHandlers from './error-handlers'
 
 export default port => {

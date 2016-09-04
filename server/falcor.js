@@ -51,13 +51,13 @@ const routes = [
             for trip in trips
             filter trip.trip_id in connected_trips
             return distinct trip.route_id)
-          
+
           let route_ids = (
             for route_id in connected_routes
             sort route_id asc
             limit ${from}, ${to - from + 1}
             return route_id)
-          
+
           return {stationId: station_id, routeIds: route_ids, routeCount: length(connected_routes)}
       `)
       return flatten(yield cursor.map(({stationId, routeIds, routeCount}) => routeIds.map((routeId, index) => ({
@@ -106,7 +106,63 @@ const routes = [
 
 export default express.Router()
   .use(bodyParser.urlencoded({extended: false}))
-  .use('/', falcor(() => new FalcorRouter(routes)))
+  .use('/', falcor(() => new AqlDataSource(aqlRoutes)))
+
+function AqlDataSource (routes) {
+
+  const rx = require('rx')
+  this.get = pathSets => rx.Observable.fromPromise(co.wrap(get)(pathSets).catch(console.error))
+}
+
+function* get (pathSets) {
+  const set = require('lodash.set')
+  const oget = require('lodash.get')
+  const aqb = require('aqb')
+  console.log(pathSets)
+  const paths = flatten(pathSets.map(expand))
+  console.log(paths)
+  const graph = paths.reduce((obj, path) => set(obj, path, path[path.length - 1]), {})
+  console.log(JSON.stringify(graph))
+
+  // Object.entries(Object.values(graph.stations.byId)).map(([key, value]) => [key, aqb.ref('station').get(key)])
+
+  const query = aqb.for('station').in('stops')
+    .filter(aqb.eq('station.location_type', 1))
+    .filter(aqb.in('station.stop_id', aqb.list(Object.keys(graph.stations.byId).map(id => aqb.str(stationDbId(id))))))
+    // .return(aqb.obj({name: 'station.stop_id'}))
+    .return('station')
+  console.log(query.toAQL())
+
+  const cursor = yield db().query(query)
+  const stations = yield cursor.map(stationDto)
+  for (const station of stations) {
+    // console.log(station.id, station)
+    graph.stations.byId[station.id] = station
+  }
+  console.log(JSON.stringify(graph))
+  const ngraph = paths.reduce((obj, path) => set(obj, path, oget(graph, path)), {})
+  console.log(JSON.stringify(ngraph))
+  return {jsonGraph: ngraph}
+  // return rx.Observable.from([graph])
+  // return rx.Observable.from(stations.flatMap(station => Object.keys(graph.stations.byId[station.id]).map(prop => ({
+    // path: ['stations', 'byId', station.id, prop],
+    // value: station[prop]
+  // }))))
+}
+
+/**
+ * Expands a compressed path set into the corresponding set of full paths.
+ *
+ * ["a", ["b", "c"], "d"] -> [["a", "b", "d"], ["a", "c", "d"]]
+ */
+function expand (pathSet) {
+  if (pathSet.length === 0) return [[]]
+  const [head, ...tail] = pathSet
+  const headPathSegments = Array.isArray(head) ? head : [head]
+  return headPathSegments.flatMap(headPathSegment => {
+    return expand(tail).map(pathSetTail => [headPathSegment, ...pathSetTail])
+  })
+}
 
 
 function stationDbId (stationDtoId) {
@@ -119,7 +175,7 @@ function stationDtoId (stopDbId) {
 
 function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
   return {
-    id: stationDtoId(stop_id),
+    id: stop_id && stationDtoId(stop_id),
     name: stop_name,
     latitude: stop_lat,
     longitude: stop_lon

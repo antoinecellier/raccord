@@ -30,7 +30,7 @@ console.log(`importing ${files.length} files`)
 files.forEach(filePath => childProcess.execFileSync(
   arangoimpPath,
   [...arangoimpDefaultArgs(filePath), ...arangoimpAdditionalArgs],
-  {stdio: ['ignore', 'ignore', 'pipe']}))
+  {stdio: ['ignore', 'pipe', 'pipe']}))
 
 console.log('done')
 

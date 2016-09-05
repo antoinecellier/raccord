@@ -17,13 +17,13 @@ export const stopType = new GraphQLObjectType({
 const wheelchairBoardingEnum = new GraphQLEnumType({
   name: 'WheelchairBoarding',
   values: {
-    ZERO: {
+    NoInformation: {
       value: 0
     },
-    ONE: {
+    Possible: {
       value: 1
     },
-    TWO: {
+    NotPossible: {
       value: 2
     }
   }
@@ -32,10 +32,10 @@ const wheelchairBoardingEnum = new GraphQLEnumType({
 const locationTypeEnum = new GraphQLEnumType({
   name: 'LocationType',
   values: {
-    ZERO: {
+    SeveralStop: {
       value: 0
     },
-    ONE: {
+    UniqueStation: {
       value: 1
     }
   }

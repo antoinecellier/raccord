@@ -1,0 +1,42 @@
+stations[id].routes[index].label
+stations[id].stops[*].routes[?].label
+stops[id].routes[?].label
+stops[id].stoptimes[*].routes[?].label
+stoptimes[id].route.label
+stoptimes[id].trip.route.label
+trips[id].route.label
+routes[id].label
+
+graphql {
+  stations(id) {
+    stops {
+      stoptimes {
+        trip {
+          route
+        }
+      }
+    }
+  }
+}
+
+{
+  _db: {
+    x1: {COMM: {id: COMM, name: Commerce}},
+    x2: {COMM: {routes: [C5]}},
+    x3: {C5: {id: C5, label: C5}}
+  },
+  stations: {
+    byId: {
+      COMM: {
+        name: {$type: ref, value: [_db, x1, COMM, name]},
+        routes: {
+          0: {
+            label: {$type: ref, value: [routes, byId, {{_db.x2.COMM.routes[0]}}, label]}
+      }
+    }
+  },
+  routes: {
+    byId: {
+      C5: {
+        label: {$type: ref, value: [_db, x3, C5, label]}
+}

@@ -17,13 +17,11 @@ const routes = [
         .filter(aqb.eq('station.location_type', 1))
         .filter(aqb.in('station.stop_id', aqb.list(ids.map(stationDbId).map(aqb.str))))
         .return('station')
-      const mapper = stations => stations
-        .map(stationDto)
-        .reduce((stationsById, station) => _.assign(stationsById, {[station.id]: _.pick(station, props)}), {})
-      return [{
-        path: [stations, byId],
-        value: {$type: 'aql', query, mapper, paths: [ids, props]}
-      }]
+      const mapper = (id, prop) => stations => stations.map(stationDto).find(station => station.id === id)[prop]
+      return Array.from(product(ids, props)).map(([id, prop]) => ({
+        path: [stations, byId, id, prop],
+        value: {$type: 'aql', query, mapper: mapper(id, prop)}
+      }))
     }
   },
   {
@@ -32,15 +30,34 @@ const routes = [
       const query = aqb.for('route').in('routes')
         .filter(aqb.in('route.route_id', aqb.list(ids.map(routeDbId).map(aqb.str))))
         .return('route')
-      const mapper = routes => routes
-        .map(routeDto)
-        .reduce((routesById, route) => _.assign(routesById, {[route.id]: _.pick(route, props)}), {})
-      return [{
-        path: [routes, byId],
-        value: {$type: 'aql', query, mapper, paths: [ids, props]}
-      }]
+      const mapper = (id, prop) => routes => routes.map(routeDto).find(route => route.id === id)[prop]
+      return Array.from(product(ids, props)).map(([id, prop]) => ({
+        path: [routes, byId, id, prop],
+        value: {$type: 'aql', query, mapper: mapper(id, prop)}
+      }))
     }
   },
+  // {
+  //   route: 'routes.byDbRef[{keys:dbrefs}][{keys:props}]',
+  //   get: function ([routes, byDbRef, dbrefs, props]) {
+  //     const query = aqb.for('route').in('routes')
+  //       .filter(aqb.in('route.route_id', aqb.list(dbrefs)))
+  //       .return('route')
+  //     const mapper = routes => routes
+  //       .map(routeDto)
+  //       .reduce((routesById, route) => _.assign(routesById, {[route.id]: _.pick(route, props)}), {})
+  //     return [
+  //       {
+  //         path: [routes, 'byId'],
+  //         value: {$type: 'aql', query, mapper}
+  //       }/*,
+  //       {
+  //         path: [routes, byDbRef, dbref, prop],
+  //         value: {$type: 'ref', value: [routes, 'byId']}
+  //       }*/
+  //     ]
+  //   }
+  // },
   {
     route: 'stations.byId[{keys:ids}].routes[{keys}]',
     get: function ([stations, byId, ids, routes, keys]) {
@@ -48,7 +65,7 @@ const routes = [
       const query = aqb.for('station_id').in(aqb.list(ids.map(stationDbId)))
         .let('children_stops',
           aqb.for('stop').in('stops')
-          .filter(aqb.eq('stop.parent_station', aqb.ref('station_id')))
+          .filter(aqb.eq('stop.parent_station', 'station_id'))
           .return('stop.stop_id'))
         .let('connected_trips',
           aqb.for('stop_time').in('stop_times')
@@ -68,7 +85,7 @@ const routes = [
           routeIds: 'route_ids',
           routeCount: aqb.fn('length')('connected_routes')
         }))
-
+      
     }
   }
 ]
@@ -79,9 +96,10 @@ export default express.Router()
 
 function aqlDataSource (router) {
   function get (paths) {
-    return router.get(paths).flatMap(jsonGraph => {
+    return router.get(paths).doOnError(console.error).flatMap(jsonGraph => {
       return Observable.fromPromise(co(function* () {
         const queries = _(collect(jsonGraph, {$type: 'aql'}))
+          .uniq()
           .map(query => _.assign(query, {id: uniqueId()}))
           .keyBy('id')
           .value()
@@ -90,10 +108,11 @@ function aqlDataSource (router) {
         const query = bindings.return(aqb.obj(selector))
         const cursor = yield db().query(query)
         const dbResults = yield cursor.next()
+        const results = _.assignWith(queries, dbResults, ({mapper}, dbResult) => mapper(dbResult))
         return _.cloneDeepWith(jsonGraph, value => {
-          if (value.$type === 'aql') return value.mapper(dbResults[value.id])
+          if (value.$type === 'aql') return results[value.id]
         })
-      })).doOnError(console.error)
+      }).catch(console.error)).doOnError(console.error)
     })
   }
   return {get}
@@ -142,4 +161,8 @@ function routeDto ({route_id, route_short_name, route_long_name}) {
     label: String(route_short_name),
     description: route_long_name
   }
+}
+
+function* product(xs, ys) {
+  for (const x of xs) for (const y of ys) yield [x, y]
 }

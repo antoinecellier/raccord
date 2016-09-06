@@ -37,27 +37,25 @@ const routes = [
       }))
     }
   },
-  // {
-  //   route: 'routes.byDbRef[{keys:dbrefs}][{keys:props}]',
-  //   get: function ([routes, byDbRef, dbrefs, props]) {
-  //     const query = aqb.for('route').in('routes')
-  //       .filter(aqb.in('route.route_id', aqb.list(dbrefs)))
-  //       .return('route')
-  //     const mapper = routes => routes
-  //       .map(routeDto)
-  //       .reduce((routesById, route) => _.assign(routesById, {[route.id]: _.pick(route, props)}), {})
-  //     return [
-  //       {
-  //         path: [routes, 'byId'],
-  //         value: {$type: 'aql', query, mapper}
-  //       }/*,
-  //       {
-  //         path: [routes, byDbRef, dbref, prop],
-  //         value: {$type: 'ref', value: [routes, 'byId']}
-  //       }*/
-  //     ]
-  //   }
-  // },
+  {
+    route: 'routes.byDbRef[{keys:dbrefs}][{keys:props}]',
+    get: function ([routes, byDbRef, dbrefs, props]) {
+      const query = aqb.for('route').in('routes')
+        .filter(aqb.in('route.route_id', aqb.list(dbrefs)))
+        .return('route')
+      const mapper = (id, prop) => routes => routes.map(routeDto).find(route => route.id === id)[prop]
+      return [
+        {
+          path: [routes, 'byId'],
+          value: {$type: 'aql', query, mapper}
+        }/*,
+        {
+          path: [routes, byDbRef, dbref, prop],
+          value: {$type: 'ref', value: [routes, 'byId']}
+        }*/
+      ]
+    }
+  },
   {
     route: 'stations.byId[{keys:ids}].routes[{keys}]',
     get: function ([stations, byId, ids, routes, keys]) {
@@ -85,7 +83,11 @@ const routes = [
           routeIds: 'route_ids',
           routeCount: aqb.fn('length')('connected_routes')
         }))
-      
+      const mapper = (id, index) => results => results.find(station => station.stationId === id).routeIds[index]
+      {
+        path: [stations, byId, id, routes, index],
+        value: {$type: 'aqlref', query, mapper, ref: [routes, byId, null]}
+      }
     }
   }
 ]

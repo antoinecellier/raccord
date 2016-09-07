@@ -32,34 +32,41 @@ const routes = [
       const queryId = uniqueId()
       return ids.map((id, index) => ({
         path: [routes, byId, id],
-        value: {$type: 'ref', value: [routes, 'byQueryId', queryId, index], query, id: queryId, aql: true, mapper}
+        value: {$type: 'ref', value: ['_data', routes, 'route_id', queryId, index], query, id: queryId, aql: true, mapper}
       }))
     }
   },
   {
-    route: 'routes.byQueryId[{keys:queryIds}][{keys}][{keys:props}]',
-    get: function ([routes, byQueryId, queryIds, keys, props]) {
-      const [{from, to} = {from: 0, to: -1}] = ranges(keys)
-      const query = aqb.for('route_ids').in(aqb.list(queryIds.map(aqb.expr)))
-        .let('routes_for_this_query',
-          aqb.for('route').in('routes')
-          .filter(aqb.in('route.route_id', 'route_ids'))
-          .sort('route.route_id', 'asc')
+    route: '_data[{keys:collections}][{keys:fields}][{keys:identifiersInQuery}][{keys:indices}][{keys:props}]',
+    get: function ([data, collections, fields, identifiersInQuery, indices, props]) {
+      if (collections.length > 1) throw new TypeError('multiple collections are not supported')
+      if (fields.length > 1) throw new TypeError('multiple fields are not supported')
+      const [collection] = collections
+      const [field] = fields
+      const [{from, to} = {from: 0, to: -1}] = ranges(indices)
+      const values = uniqueId('values')
+      const items = uniqueId(collection)
+      const item = uniqueId(collection)
+      const query = aqb.for(values).in(aqb.list(identifiersInQuery.map(aqb.expr)))
+        .let(items,
+          aqb.for(item).in(collection)
+          .filter(aqb.in(aqb.ref(item).get(aqb.str(field)), values))
+          .sort(aqb.ref(item).get(aqb.str(field)), 'asc')
           .limit(from, to - from + 1)
-          .return('route'))
-        .return('routes_for_this_query')
+          .return(item))
+        .return(items)
       const thisQueryId = uniqueId()
-      const mapper = (queryIndex, index, prop) => routes => routeDto(routes[queryIndex][index])[prop]
-      return Array.from(product(queryIds.entries(), keys, props)).map(([[queryIndex, queryId], index, prop]) => ({
-        path: [routes, byQueryId, queryId, index, prop],
-        value: {aql: true, query, mapper: mapper(queryIndex, index, prop), id: thisQueryId}
+      const mapper = (identifierInQueryIndex, index, prop) => routes => routeDto(routes[identifierInQueryIndex][index])[prop]
+      return Array.from(product(collections, fields, identifiersInQuery.entries(), indices, props)).map(([collection, field, [identifierInQueryIndex, identifierInQuery], index, prop]) => ({
+        path: [data, collection, field, identifierInQuery, index, prop],
+        value: {aql: true, query, mapper: mapper(identifierInQueryIndex, index, prop), id: thisQueryId}
       }))
     }
   },
   {
     route: 'stations.byId[{keys:ids}].routes',
     get: function ([stations, byId, ids, routes, keys]) {
-      const query = aqb.for('station_id').in(aqb.list(ids.map(stationDbId).map(aqb.str)))
+      const query = aqb.fn('zip')(aqb.list(ids.map(stationDbId).map(aqb.str)), aqb.for('station_id').in(aqb.list(ids.map(stationDbId).map(aqb.str)))
         .let('children_stops',
           aqb.for('stop').in('stops')
           .filter(aqb.eq('stop.parent_station', 'station_id'))
@@ -79,11 +86,11 @@ const routes = [
           stationId: 'station_id',
           routeIds: 'route_ids',
           routeCount: aqb.fn('length')('connected_routes')
-        }))
-      const queryId = uniqueId()
+        })))
+      // const queryId = ids.join('_')//uniqueId()
       return ids.map((id, index) => ({
         path: [stations, byId, id, routes],
-        value: {$type: 'ref', value: [routes, 'byQueryId', `${queryId}[${index}].routeIds`], aql: true, query, id: queryId, mapper: () => {}}
+        value: {$type: 'ref', value: ['_data', routes, 'route_id', `${id}[${index}].routeIds`], aql: true, query, id, mapper: () => {}}
       }))
     }
   }
@@ -130,8 +137,8 @@ function aqlDataSource (router) {
   }
 }
 
-function uniqueId () {
-  return _.uniqueId('x') // prefix with a letter to make it a valid AQL identifier
+function uniqueId (prefix) {
+  return _.uniqueId(prefix || 'x') // prefix with a letter to make it a valid AQL identifier
 }
 
 function stationDbId (stationDtoId) {

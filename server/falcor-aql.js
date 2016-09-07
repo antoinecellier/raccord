@@ -20,47 +20,46 @@ const routes = [
       const mapper = (id, prop) => stations => stations.map(stationDto).find(station => station.id === id)[prop]
       return Array.from(product(ids, props)).map(([id, prop]) => ({
         path: [stations, byId, id, prop],
-        value: {$type: 'aql', query, mapper: mapper(id, prop)}
+        value: {aql: true, query, mapper: mapper(id, prop)}
       }))
     }
   },
   {
-    route: 'routes.byId[{keys:ids}][{keys:props}]',
+    route: 'routes.byId[{keys:ids}]',
     get: function ([routes, byId, ids, props]) {
-      const query = aqb.for('route').in('routes')
-        .filter(aqb.in('route.route_id', aqb.list(ids.map(routeDbId).map(aqb.str))))
-        .return('route')
-      const mapper = (id, prop) => routes => routes.map(routeDto).find(route => route.id === id)[prop]
-      return Array.from(product(ids, props)).map(([id, prop]) => ({
-        path: [routes, byId, id, prop],
-        value: {$type: 'aql', query, mapper: mapper(id, prop)}
+      const query = aqb.list(ids.map(routeDbId).map(aqb.str))
+      const mapper = x => x
+      const queryId = uniqueId()
+      return ids.map((id, index) => ({
+        path: [routes, byId, id],
+        value: {$type: 'ref', value: [routes, 'byQueryId', queryId, index], query, id: queryId, aql: true, mapper}
       }))
     }
   },
   {
-    route: 'routes.byDbRef[{keys:dbrefs}][{keys:props}]',
-    get: function ([routes, byDbRef, dbrefs, props]) {
-      const query = aqb.for('route').in('routes')
-        .filter(aqb.in('route.route_id', aqb.list(dbrefs)))
-        .return('route')
-      const mapper = (id, prop) => routes => routes.map(routeDto).find(route => route.id === id)[prop]
-      return [
-        {
-          path: [routes, 'byId'],
-          value: {$type: 'aql', query, mapper}
-        }/*,
-        {
-          path: [routes, byDbRef, dbref, prop],
-          value: {$type: 'ref', value: [routes, 'byId']}
-        }*/
-      ]
+    route: 'routes.byQueryId[{keys:queryIds}][{keys}][{keys:props}]',
+    get: function ([routes, byQueryId, queryIds, keys, props]) {
+      const [{from, to} = {from: 0, to: -1}] = ranges(keys)
+      const query = aqb.for('route_ids').in(aqb.list(queryIds.map(aqb.expr)))
+        .let('routes_for_this_query',
+          aqb.for('route').in('routes')
+          .filter(aqb.in('route.route_id', 'route_ids'))
+          .sort('route.route_id', 'asc')
+          .limit(from, to - from + 1)
+          .return('route'))
+        .return('routes_for_this_query')
+      const thisQueryId = uniqueId()
+      const mapper = (queryIndex, index, prop) => routes => routeDto(routes[queryIndex][index])[prop]
+      return Array.from(product(queryIds.entries(), keys, props)).map(([[queryIndex, queryId], index, prop]) => ({
+        path: [routes, byQueryId, queryId, index, prop],
+        value: {aql: true, query, mapper: mapper(queryIndex, index, prop), id: thisQueryId}
+      }))
     }
   },
   {
-    route: 'stations.byId[{keys:ids}].routes[{keys}]',
+    route: 'stations.byId[{keys:ids}].routes',
     get: function ([stations, byId, ids, routes, keys]) {
-      const [{from, to} = {from: 0, to: -1}] = ranges(keys)
-      const query = aqb.for('station_id').in(aqb.list(ids.map(stationDbId)))
+      const query = aqb.for('station_id').in(aqb.list(ids.map(stationDbId).map(aqb.str)))
         .let('children_stops',
           aqb.for('stop').in('stops')
           .filter(aqb.eq('stop.parent_station', 'station_id'))
@@ -75,19 +74,17 @@ const routes = [
           .returnDistinct('trip.route_id'))
         .let('route_ids',
           aqb.for('route_id').in('connected_routes')
-          .sort('route_id', 'asc')
-          .limit(from, to - from + 1)
           .return('route_id'))
         .return(aqb.obj({
           stationId: 'station_id',
           routeIds: 'route_ids',
           routeCount: aqb.fn('length')('connected_routes')
         }))
-      const mapper = (id, index) => results => results.find(station => station.stationId === id).routeIds[index]
-      {
-        path: [stations, byId, id, routes, index],
-        value: {$type: 'aqlref', query, mapper, ref: [routes, byId, null]}
-      }
+      const queryId = uniqueId()
+      return ids.map((id, index) => ({
+        path: [stations, byId, id, routes],
+        value: {$type: 'ref', value: [routes, 'byQueryId', `${queryId}[${index}].routeIds`], aql: true, query, id: queryId, mapper: () => {}}
+      }))
     }
   }
 ]
@@ -100,28 +97,29 @@ function aqlDataSource (router) {
   function get (paths) {
     return router.get(paths).doOnError(console.error).flatMap(jsonGraph => {
       return Observable.fromPromise(co(function* () {
-        const queries = _(collect(jsonGraph, {$type: 'aql'}))
-          .uniq()
-          .map(query => _.assign(query, {id: uniqueId()}))
+        const queries = _(collect(jsonGraph, {aql: true}))
+          .map(query => _.defaults(query, {id: uniqueId()}))
           .keyBy('id')
           .value()
         const bindings = _.reduce(queries, (bindings, {id, query}) => bindings.let(id, query), aqb)
         const selector = _.mapValues(queries, 'id')
         const query = bindings.return(aqb.obj(selector))
+        console.log(query.toAQL())
         const cursor = yield db().query(query)
         const dbResults = yield cursor.next()
-        const results = _.assignWith(queries, dbResults, ({mapper}, dbResult) => mapper(dbResult))
         return _.cloneDeepWith(jsonGraph, value => {
-          if (value.$type === 'aql') return results[value.id]
+          if (!value) return
+          if (value.aql && value.$type !== 'ref') return value.mapper(dbResults[value.id])
+          if (value.aql && value.query) {
+            delete value.query
+            delete value.id
+            delete value.aql
+          }
         })
       }).catch(console.error)).doOnError(console.error)
     })
   }
   return {get}
-
-  function uniqueId () {
-    return _.uniqueId('x') // prefix with a letter to make it a valid AQL identifier
-  }
 
   function collect (obj, predicate) {
     const results = []
@@ -130,6 +128,10 @@ function aqlDataSource (router) {
     })
     return results
   }
+}
+
+function uniqueId () {
+  return _.uniqueId('x') // prefix with a letter to make it a valid AQL identifier
 }
 
 function stationDbId (stationDtoId) {
@@ -165,6 +167,8 @@ function routeDto ({route_id, route_short_name, route_long_name}) {
   }
 }
 
-function* product(xs, ys) {
-  for (const x of xs) for (const y of ys) yield [x, y]
+function* product (...xss) {
+  const [head, ...tail] = xss
+  if (head) for (const x of head) for (const xs of product(...tail)) yield [x, ...xs]
+  else yield []
 }

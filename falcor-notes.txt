@@ -22,7 +22,7 @@ graphql {
 {
   _db: {
     x1: {COMM: {id: COMM, name: Commerce}},
-    x2: {COMM: {routes: [C5]}},
+    x2: {COMM: [{$type: ref, value: [routes, byId, C5]}]
     x3: {C5: {id: C5, label: C5}}
   },
   stations: {
@@ -30,8 +30,7 @@ graphql {
       COMM: {
         name: {$type: ref, value: [_db, x1, COMM, name]},
         routes: {
-          0: {
-            label: {$type: ref, value: [routes, byId, {{_db.x2.COMM.routes[0]}}, label]}
+          0: {$type: ref, value: [_db, x2, COMM, routes, 0]}
       }
     }
   },

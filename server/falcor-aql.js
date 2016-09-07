@@ -66,7 +66,7 @@ const routes = [
   {
     route: 'stations.byId[{keys:ids}].routes',
     get: function ([stations, byId, ids, routes, keys]) {
-      const query = aqb.fn('zip')(aqb.list(ids.map(stationDbId).map(aqb.str)), aqb.for('station_id').in(aqb.list(ids.map(stationDbId).map(aqb.str)))
+      const query = aqb.fn('zip')(aqb.list(ids.map(aqb.str)), aqb.for('station_id').in(aqb.list(ids.map(stationDbId).map(aqb.str)))
         .let('children_stops',
           aqb.for('stop').in('stops')
           .filter(aqb.eq('stop.parent_station', 'station_id'))
@@ -87,10 +87,10 @@ const routes = [
           routeIds: 'route_ids',
           routeCount: aqb.fn('length')('connected_routes')
         })))
-      // const queryId = ids.join('_')//uniqueId()
+      const queryId = ids.join('_')//uniqueId()
       return ids.map((id, index) => ({
         path: [stations, byId, id, routes],
-        value: {$type: 'ref', value: ['_data', routes, 'route_id', `${id}[${index}].routeIds`], aql: true, query, id, mapper: () => {}}
+        value: {$type: 'ref', value: ['_data', routes, 'route_id', `${id}["${id}"].routeIds`], aql: true, query, id: queryId, mapper: () => {}, aliases: ids}
       }))
     }
   }
@@ -108,7 +108,10 @@ function aqlDataSource (router) {
           .map(query => _.defaults(query, {id: uniqueId()}))
           .keyBy('id')
           .value()
-        const bindings = _.reduce(queries, (bindings, {id, query}) => bindings.let(id, query), aqb)
+        const bindings = _.reduce(queries, (bindings, {id, query, aliases = []}) => {
+          const base = bindings.let(id, query)
+          return aliases.reduce((newBindings, alias) => newBindings.let(alias, id), base)
+        }, aqb)
         const selector = _.mapValues(queries, 'id')
         const query = bindings.return(aqb.obj(selector))
         console.log(query.toAQL())
@@ -121,6 +124,7 @@ function aqlDataSource (router) {
             delete value.query
             delete value.id
             delete value.aql
+            delete value.aliases
           }
         })
       }).catch(console.error)).doOnError(console.error)

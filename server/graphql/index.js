@@ -1,4 +1,4 @@
-import { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLList, GraphQLInt } from 'graphql'
+import { GraphQLNonNull, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLList, GraphQLInt } from 'graphql'
 import graphqlHTTP from 'express-graphql'
 import express from 'express'
 import co from 'co'
@@ -14,8 +14,8 @@ const schema = new GraphQLSchema({
         type: new GraphQLList(stopType),
         args: {
           search: { type: GraphQLString },
-          from: { type: GraphQLInt },
-          length: { type: GraphQLInt }
+          from: { type: new GraphQLNonNull(GraphQLInt) },
+          length: { type: new GraphQLNonNull(GraphQLInt) }
         },
         resolve: (_, { search, from, length }) => {
           return db().query(aql`

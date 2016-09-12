@@ -1,5 +1,7 @@
 import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLInt, GraphQLEnumType } from 'graphql'
+import db, {aql} from '../../db'
 
+import {stopType} from './stop'
 
 export const stopTimeType = new GraphQLObjectType({
     name: 'StopTime',
@@ -7,7 +9,18 @@ export const stopTimeType = new GraphQLObjectType({
       trip_id: { type: new GraphQLNonNull(GraphQLString) },
       arrival_time: { type: new GraphQLNonNull(GraphQLString) },
       departure_time: { type: new GraphQLNonNull(GraphQLString) },
-      stop_id: { type: new GraphQLNonNull(GraphQLString) },
+      stop: {
+        type: new GraphQLNonNull(stopType),
+        resolve: ({ stop_id }) => {
+          console.log(stop_id);
+          return db().query(aql`
+              for stop in stops
+              filter stop.stop_id == ${stop_id}
+              return stop
+            `).then(cursor => cursor.next() )
+              .then(stop => stop )
+        }
+      },
       stop_sequence: { type: new GraphQLNonNull(GraphQLInt) },
       drop_off_type: { type: DropOffType },
       pickup_type: { type: PickupType },

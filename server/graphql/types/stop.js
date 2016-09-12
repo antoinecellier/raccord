@@ -14,6 +14,10 @@ export const stopType = new GraphQLObjectType({
     })
 })
 
+export function stopDbId (stopDtoId) {
+  return 'StopPoint:' + stopDtoId
+}
+
 const wheelchairBoardingEnum = new GraphQLEnumType({
   name: 'WheelchairBoarding',
   values: {

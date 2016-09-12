@@ -1,10 +1,11 @@
 import { GraphQLNonNull, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLList, GraphQLInt } from 'graphql'
 import graphqlHTTP from 'express-graphql'
 import express from 'express'
-import co from 'co'
+import moment from 'moment'
 import db, {aql} from '../db'
 
-import {stopType} from './types/stop'
+import {stopType, stopDbId} from './types/stop'
+import {stopTimeType} from './types/stopTime'
 
 const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -27,6 +28,43 @@ const schema = new GraphQLSchema({
             `).then(cursor => cursor.all())
         }
       },
+      stopTimes: {
+        type: new GraphQLList(stopTimeType),
+        args: {
+          station: { type: new GraphQLNonNull(GraphQLString) },
+          after: { type: new GraphQLNonNull(GraphQLString) },
+          from: { type: new GraphQLNonNull(GraphQLInt) },
+          length: { type: new GraphQLNonNull(GraphQLInt) }
+        },
+        resolve: (_, {station, after, from, length}) => {
+          const afterMoment = moment(after)
+          const afterWeekday = afterMoment.format('dddd').toLowerCase()
+          const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
+          const afterTime = afterMoment.format('HH:mm:ss')
+          return db().query(aql`
+            let active_services = (
+              for service in calendar
+              filter service.${afterWeekday} == 1 && service.start_date <= ${afterDay} && service.end_date >= ${afterDay}
+              return service.service_id)
+
+            let active_trips = (
+              for trip in trips
+              filter trip.service_id in active_services
+              return trip.trip_id)
+
+            let children_stops = (
+              for stop in stops
+              filter stop.stop_id == ${stopDbId(station)}
+              return stop.stop_id)
+
+            for stop_time in stop_times
+            filter stop_time.stop_id in children_stops && stop_time.trip_id in active_trips && stop_time.departure_time >= ${afterTime}
+            sort stop_time.departure_time
+            limit ${from}, ${length}
+            return stop_time
+          `).then(cursor => cursor.all())
+        }
+      }
     })
   })
 })

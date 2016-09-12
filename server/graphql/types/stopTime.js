@@ -12,7 +12,6 @@ export const stopTimeType = new GraphQLObjectType({
       stop: {
         type: new GraphQLNonNull(stopType),
         resolve: ({ stop_id }) => {
-          console.log(stop_id);
           return db().query(aql`
               for stop in stops
               filter stop.stop_id == ${stop_id}

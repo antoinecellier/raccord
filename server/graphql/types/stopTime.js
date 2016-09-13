@@ -2,11 +2,22 @@ import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLInt, GraphQLEn
 import db, {aql} from '../../db'
 
 import {stopType} from './stop'
+import {tripType} from './trip'
 
 export const stopTimeType = new GraphQLObjectType({
     name: 'StopTime',
     fields: () => ({
-      trip_id: { type: new GraphQLNonNull(GraphQLString) },
+      trip: {
+        type: new GraphQLNonNull(tripType),
+        resolve: ({ trip_id }) => {
+          return db().query(aql`
+            for trip in trips
+            filter trip.trip_id == ${trip_id}
+            return trip
+            `).then(cursor => cursor.next())
+              .then(trip => trip)
+        }
+      },
       arrival_time: { type: new GraphQLNonNull(GraphQLString) },
       departure_time: { type: new GraphQLNonNull(GraphQLString) },
       stop: {

@@ -1,6 +1,5 @@
 import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType } from 'graphql'
 
-
 export const stopType = new GraphQLObjectType({
     name: 'Stop',
     fields: () => ({

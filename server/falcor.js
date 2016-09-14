@@ -150,7 +150,7 @@ const routes = [
   {
     route: 'stations.favorites[{keys:users}].remove',
     call: co.wrap(function* ([stations, favorites, [userId]], [stationId]) {
-      const cursor = yield (db().query(aql`
+      const cursor = yield db().query(aql`
         let user_favorites = (
           for favorite_stop in favorite_stops
           filter favorite_stop.user_id == ${userId}
@@ -162,7 +162,7 @@ const routes = [
         let index_of_old = position(user_favorites, the_favorite, true)
         remove the_favorite in favorite_stops options {ignoreErrors: true}
         return {indexOfRemovedFavorite: index_of_old}
-      `).catch(console.error))
+      `)
       const {indexOfRemovedFavorite} = yield cursor.next()
       if (indexOfRemovedFavorite < 0) return []
       return Array(indexOfRemovedFavorite).fill(0).map((zero, index) => ({

@@ -3,12 +3,13 @@ import db, {aql} from '../db'
 
 import {stopType, stopDbId} from './types/stop'
 import {stopTimeType} from './types/stopTime'
+import {favoriteStopType} from './types/favoriteStop'
 
 export default new GraphQLObjectType({
   name: 'Mutation',
   fields: () => ({
     addFavorite: {
-      type: stopType,
+      type: favoriteStopType,
       args: {
         stop_id: { type: new GraphQLNonNull(GraphQLString) },
         user_id: { type: new GraphQLNonNull(GraphQLString) }
@@ -32,7 +33,7 @@ export default new GraphQLObjectType({
       }
     },
     removeFavorite: {
-      type: stopType,
+      type: favoriteStopType,
       args: {
         stop_id: { type: new GraphQLNonNull(GraphQLString) },
         user_id: { type: new GraphQLNonNull(GraphQLString) }

@@ -16,9 +16,9 @@ export default new GraphQLObjectType({
       },
       resolve: (_, { stop_id, user_id }) => {
         return db().query(aql`
-            for favorite in favorites
-            filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
-            return favorite
+            for favoriteStop in favoriteStops
+            filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
+            return favoriteStop
           `).then(cursor => {
             if (cursor.hasNext()) throw new GraphQLError('This stop is already in the user\'s favorites')
 
@@ -40,18 +40,18 @@ export default new GraphQLObjectType({
       },
       resolve: (_, { stop_id, user_id }) => {
         return db().query(aql`
-            for favorite in favorites
-            filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
-            return favorite
+            for favoriteStop in favoriteStops
+            filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
+            return favoriteStop
           `).then(cursor => {
             if (!cursor.hasNext()) throw new GraphQLError('This stop is not present in the user\'s favorites')
             return cursor.next()
           }).then(favorite => {
             return db().query(aql`
-                for favorite in favorites
-                filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
-                remove favorite into favorites
-                return favorite
+                for favoriteStop in favoriteStops
+                filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
+                remove favoriteStop into favoriteStops
+                return favoriteStop
                 `).then(cursor => cursor.next())
                   .then(favorite => favorite)
           })

@@ -5,6 +5,7 @@ import db, {aql} from '../db'
 
 import {stopType, stopDbId} from './types/stop'
 import {stopTimeType} from './types/stopTime'
+import {favoriteStopType} from './types/favoriteStop'
 
 export default new GraphQLObjectType({
   name: 'Query',
@@ -40,6 +41,23 @@ export default new GraphQLObjectType({
             sort stop.stop_name asc
             limit ${from}, ${length}
             return stop
+          `).then(cursor => cursor.all())
+      }
+    },
+    favoriteStops: {
+      type: new GraphQLList(favoriteStopType),
+      args: {
+        user_id: { type: new GraphQLNonNull(GraphQLString) },
+        from: { type: new GraphQLNonNull(GraphQLInt) },
+        length: { type: new GraphQLNonNull(GraphQLInt) }
+      },
+      resolve: (_, { user_id, from, length }) => {
+        return db().query(aql`
+            for favoriteStop in favoriteStops
+            filter favoriteStop.user_id == ${user_id}
+            sort favoriteStop.stop_name asc
+            limit ${from}, ${length}
+            return favoriteStop
           `).then(cursor => cursor.all())
       }
     },

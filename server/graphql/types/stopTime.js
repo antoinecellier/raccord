@@ -50,7 +50,7 @@ const PickupType = new GraphQLEnumType({
     PhoneAgency: {
       value: 2
     },
-    CoordinateDriver: {
+    CoordinateWithDriver: {
       value: 3
     }
   }

@@ -51,13 +51,13 @@ const routes = [
             for trip in trips
             filter trip.trip_id in connected_trips
             return distinct trip.route_id)
-          
+
           let route_ids = (
             for route_id in connected_routes
             sort route_id asc
             limit ${from}, ${to - from + 1}
             return route_id)
-          
+
           return {stationId: station_id, routeIds: route_ids, routeCount: length(connected_routes)}
       `)
       return flatten(yield cursor.map(({stationId, routeIds, routeCount}) => routeIds.map((routeId, index) => ({
@@ -137,8 +137,8 @@ function routeDtoId (routeDbId) {
 function routeDto ({route_id, route_short_name, route_long_name}) {
   return {
     id: routeDtoId(route_id),
-    label: String(route_short_name),
-    description: route_long_name
+    shortName: String(route_short_name),
+    longName: route_long_name
   }
 }
 

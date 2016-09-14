@@ -110,6 +110,31 @@ const schema = new GraphQLSchema({
                     .then(stop => stop)
             })
         }
+      },
+      removeFavorite: {
+        type: stopType,
+        args: {
+          stop_id: { type: new GraphQLNonNull(GraphQLString) },
+          user_id: { type: new GraphQLNonNull(GraphQLString) }
+        },
+        resolve: (_, { stop_id, user_id }) => {
+          return db().query(aql`
+              for favorite in favorites
+              filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
+              return favorite
+            `).then(cursor => {
+              if (!cursor.hasNext()) throw new GraphQLError('This stop is not present in the user\'s favorites')
+              return cursor.next()
+            }).then(favorite => {
+              return db().query(aql`
+                  for favorite in favorites
+                  filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
+                  remove favorite into favorites
+                  return favorite
+                  `).then(cursor => cursor.next())
+                    .then(favorite => favorite)
+            })
+        }
       }
     })
   })

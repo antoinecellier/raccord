@@ -106,6 +106,72 @@ const routes = [
     })
   },
   {
+    route: 'stations.favorites[{keys:users}][{ranges}]',
+    get: co.wrap(function* ([stations, favorites, [userId], [{from, to}]]) {
+      const cursor = yield db().query(aql`
+        for favorite_stop in favorite_stops
+        filter favorite_stop.user_id == ${userId}
+        return favorite_stop.stop_id
+      `)
+      const stationDtoIds = yield cursor.map(stationDtoId)
+      return stationDtoIds.map((stationId, index) => ({
+        path: [stations, favorites, userId, from + index],
+        value: {$type: 'ref', value: [stations, 'byId', stationId]}
+      }))
+    })
+  },
+  {
+    route: 'stations.favorites[{keys:users}].push',
+    call: co.wrap(function* ([stations, favorites, [userId]], [stationId]) {
+      const cursor = yield db().query(aql`
+        let user_favorites = (
+          for favorite_stop in favorite_stops
+          filter favorite_stop.user_id == ${userId}
+          return favorite_stop)
+        let the_favorite = (
+          for favorite_stop in user_favorites
+          filter favorite_stop.stop_id == ${stationDbId(stationId)}
+          return favorite_stop)[0]
+        let index_of_old = position(user_favorites, the_favorite, true)
+        let index_of_new = index_of_old >= 0 ? index_of_old : length(user_favorites)
+        upsert {stop_id: ${stationDbId(stationId)}, user_id: ${userId}}
+        insert {stop_id: ${stationDbId(stationId)}, user_id: ${userId}}
+        update {}
+        in favorite_stops
+        return index_of_new
+      `)
+      const indexOfFavorite = yield cursor.next()
+      return [{
+        path: [stations, favorites, userId, indexOfFavorite],
+        value: {$type: 'ref', value: [stations, 'byId', stationId]}
+      }]
+    })
+  },
+  {
+    route: 'stations.favorites[{keys:users}].remove',
+    call: co.wrap(function* ([stations, favorites, [userId]], [stationId]) {
+      const cursor = yield (db().query(aql`
+        let user_favorites = (
+          for favorite_stop in favorite_stops
+          filter favorite_stop.user_id == ${userId}
+          return favorite_stop)
+        let the_favorite = (
+          for favorite_stop in user_favorites
+          filter favorite_stop.stop_id == ${stationDbId(stationId)}
+          return favorite_stop)[0]
+        let index_of_old = position(user_favorites, the_favorite, true)
+        remove the_favorite in favorite_stops options {ignoreErrors: true}
+        return {indexOfRemovedFavorite: index_of_old}
+      `).catch(console.error))
+      const {indexOfRemovedFavorite} = yield cursor.next()
+      if (indexOfRemovedFavorite < 0) return []
+      return Array(indexOfRemovedFavorite).fill(0).map((zero, index) => ({
+        path: [stations, favorites, userId, index + indexOfRemovedFavorite],
+        invalidated: true
+      }))
+    })
+  },
+  {
     route: 'routes.byId[{keys:ids}][{keys:props}]',
     get: co.wrap(function* ([routes, byId, ids, props]) {
       const cursor = yield db().query(aql`

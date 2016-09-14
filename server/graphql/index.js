@@ -1,4 +1,4 @@
-import { GraphQLNonNull, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLList, GraphQLInt } from 'graphql'
+import { GraphQLError, GraphQLNonNull, GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLList, GraphQLInt } from 'graphql'
 import graphqlHTTP from 'express-graphql'
 import express from 'express'
 import moment from 'moment'
@@ -80,6 +80,35 @@ const schema = new GraphQLSchema({
             limit ${from}, ${length}
             return stop_time
           `).then(cursor => cursor.all())
+        }
+      }
+    })
+  }),
+  mutation: new GraphQLObjectType({
+    name: 'Mutation',
+    fields: () => ({
+      addFavorite: {
+        type: stopType,
+        args: {
+          stop_id: { type: new GraphQLNonNull(GraphQLString) },
+          user_id: { type: new GraphQLNonNull(GraphQLString) }
+        },
+        resolve: (_, { stop_id, user_id }) => {
+          return db().query(aql`
+              for favorite in favorites
+              filter favorite.stop_id == ${stopDbId(stop_id)} && favorite.user_id == ${user_id}
+              return favorite
+            `).then(cursor => {
+              if (cursor.hasNext()) throw new GraphQLError('This stop is already in the user\'s favorites')
+
+              return db().query(aql`
+                  for stop in stops
+                  filter stop.stop_id == ${stopDbId(stop_id)}
+                  insert unset(merge([stop, {"user_id": ${user_id}, "favorite_id": concat(${user_id}, "_",stop.stop_id)}]), "_id", "_key") into favorites
+                  return unset(merge([stop, {"user_id": ${user_id}, "favorite_id": concat(${user_id}, "_",stop.stop_id)}]), "_id", "_key")
+                  `).then(cursor => cursor.next())
+                    .then(stop => stop)
+            })
         }
       }
     })

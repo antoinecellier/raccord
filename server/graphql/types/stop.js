@@ -39,7 +39,7 @@ export const stopType = new GraphQLObjectType({
 })
 
 export function stopDbId (stopDtoId) {
-  return 'StopArea:' + stopDtoId
+  return 'StopPoint:' + stopDtoId
 }
 
 const wheelchairBoardingEnum = new GraphQLEnumType({

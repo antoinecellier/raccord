@@ -32,6 +32,24 @@ const routes = [
     })
   },
   {
+    route: 'stations.search[{keys:queries}][{ranges:indices}]',
+    get: co.wrap(function* ([stations, search, queries, [{from, to}]]) {
+      const [query] = queries
+      const cursor = yield db().query(aql`
+        for stop in fulltext(stops, "stop_name", concat("prefix:", ${query}))
+        filter stop.location_type == 1
+        sort stop.stop_name asc
+        limit ${from}, ${to - from + 1}
+        return stop.stop_id
+      `)
+      const stationDtoIds = yield cursor.map(stationDtoId)
+      return stationDtoIds.map((stationId, index) => ({
+        path: [stations, search, query, from + index],
+        value: {$type: 'ref', value: [stations, 'byId', stationId]}
+      }))
+    })
+  },
+  {
     route: 'stations.byId[{keys:ids}].routes[{keys}]',
     get: co.wrap(function* ([stations, byId, ids, routes, keys]) {
       const [{from, to} = {from: 0, to: -1}] = ranges(keys)

@@ -4,6 +4,7 @@ import spdy from 'spdy'
 import express from 'express'
 import rest from './rest'
 import falcor from './falcor'
+import graphql from './graphql'
 import errorHandlers from './error-handlers'
 
 export default port => {
@@ -12,6 +13,7 @@ export default port => {
     .get('/favicon.ico', (req, res) => res.sendStatus(204))
     .use('/rest', rest)
     .use('/falcor', falcor)
+    .use('/graphql', graphql)
     .use(errorHandlers.joi)
     .use(errorHandlers.boom)
     .use(errorHandlers.arango)

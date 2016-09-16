@@ -27,6 +27,7 @@
     "spdy": "^3.4.0"
   },
   "devDependencies": {
-    "nodemon": "^1.10.2"
+    "nodemon": "^1.10.2",
+    "typescript": "^1.8.10"
   }
 }

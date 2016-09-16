@@ -1,0 +1,9 @@
+{
+  "compileOnSave": true,
+  "files": [
+    "server/rest/cache-control.ts"
+  ],
+  "compilerOptions": {
+    "outFile": "server/rest/cache-control.ts.js"
+  }
+}

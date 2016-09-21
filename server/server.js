@@ -10,7 +10,7 @@ import errorHandlers from './error-handlers'
 
 export default port => {
   const handler = express()
-    .use(cors())
+    .use(cors({origin: 'http://localhost:8000', credentials: true}))
     .get('/', (req, res) => res.send("It's working!"))
     .get('/favicon.ico', (req, res) => res.sendStatus(204))
     .use('/rest', rest)

@@ -1,27 +1,27 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 
 export default class ConfigPanel extends Component {
-  constructor(props) {
-      super(props);
-      this.state = {
-        source: "rest"
-      }
+  constructor (props) {
+    super(props)
+    this.state = {
+      source: 'rest'
+    }
 
-      this.config = {
-        source: {
-          rest: "rest",
-          database: "database"
-        }
+    this.config = {
+      source: {
+        rest: 'rest',
+        database: 'database'
       }
+    }
   }
 
-  handleSource(e) {
+  handleSource (e) {
     this.setState({
       source: e.target.value
     })
   }
 
-  render() {
+  render () {
     return (
       <div className="panel panel-info">
         <div className="panel-heading">
@@ -53,6 +53,6 @@ export default class ConfigPanel extends Component {
           </div>
         </div>
       </div>
-    );
+    )
   }
 }

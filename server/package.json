@@ -1,0 +1,26 @@
+{
+  "name": "raccord-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index"
+  },
+  "dependencies": {
+    "arangojs": "^5.0.3",
+    "babel-core": "^6.14.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.14.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "body-parser": "^1.15.2",
+    "boom": "^4.0.0",
+    "co-express": "^1.2.2",
+    "express": "git+https://github.com/expressjs/express.git#1dbfee66235c6a4e2f8e440264f71f31ddbe75d4",
+    "http2": "^3.3.4",
+    "joi": "^9.0.4",
+    "moment": "^2.14.1",
+    "spdy": "^3.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.10.2"
+  }
+}

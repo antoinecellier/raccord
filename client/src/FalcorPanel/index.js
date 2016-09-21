@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import React, { Component } from 'react'
 import AceEditor from 'react-ace'
 import 'brace/mode/javascript'
 import 'brace/theme/github'

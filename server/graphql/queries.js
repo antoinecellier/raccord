@@ -53,11 +53,10 @@ export default new GraphQLObjectType({
       },
       resolve: (_, { user_id, from, length }) => {
         return db().query(aql`
-            for favoriteStop in favoriteStops
-            filter favoriteStop.user_id == ${user_id}
-            sort favoriteStop.stop_name asc
+            for favorite_stop in favorite_stops
+            filter favorite_stop.user_id == ${user_id}
             limit ${from}, ${length}
-            return favoriteStop
+            return favorite_stop
           `).then(cursor => cursor.all())
       }
     },

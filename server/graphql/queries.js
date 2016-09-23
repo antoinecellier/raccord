@@ -4,6 +4,7 @@ import moment from 'moment'
 import db, {aql} from '../db'
 
 import {stopType, stopDbId} from './types/stop'
+import {stationType, stationDbId} from './types/station'
 import {stopTimeType} from './types/stopTime'
 import {favoriteStopType} from './types/favoriteStop'
 
@@ -11,7 +12,7 @@ export default new GraphQLObjectType({
   name: 'Query',
   fields: () => ({
     stations: {
-      type: new GraphQLList(stopType),
+      type: new GraphQLList(stationType),
       args: {
         search: { type: GraphQLString },
         from: { type: new GraphQLNonNull(GraphQLInt) },

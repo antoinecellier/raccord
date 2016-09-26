@@ -18,5 +18,7 @@
   {"collection": "stop_times", "fields": ["trip_id", "stop_sequence"], "type": "hash", "unique": true},
   {"collection": "stop_times", "fields": ["departure_time"], "type": "skiplist"},
   {"collection": "trips", "fields": ["trip_id"], "type": "hash", "unique": true},
-  {"collection": "trips", "fields": ["service_id"], "type": "hash"}
+  {"collection": "trips", "fields": ["service_id"], "type": "hash"},
+  {"collection": "favorite_stops", "fields": ["user_id"], "type": "hash"},
+  {"collection": "favorite_stops", "fields": ["stop_id"], "type": "hash"}
 ]

@@ -14,7 +14,7 @@ export default class FalcorPanel extends Component {
       request: ''
     }
     this.handleRequest = request => this.setState({ request })
-    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(console.log.bind(console))
+    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(this.props.onResponse)
   }
 
   render () {
@@ -31,7 +31,7 @@ export default class FalcorPanel extends Component {
           value={this.state.request}
           editorProps={{$blockScrolling: true}}
         />
-        <button className="btn" onClick={this.handleExecute}>Get</button>
+        <button className="btn btn-primary btn-block" onClick={this.handleExecute}>Fire Falcor!</button>
       </div>
     )
   }

@@ -2,6 +2,7 @@ import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQL
 import db, {aql} from '../../db'
 
 import {routeType} from './route'
+import {stationType, locationTypeEnum} from './station'
 
 const wheelchairBoardingEnum = new GraphQLEnumType({
   name: 'WheelchairBoarding',
@@ -18,24 +19,22 @@ const wheelchairBoardingEnum = new GraphQLEnumType({
   }
 });
 
-const locationTypeEnum = new GraphQLEnumType({
-  name: 'LocationType',
-  values: {
-    SeveralStop: {
-      value: 0
-    },
-    UniqueStation: {
-      value: 1
-    }
-  }
-});
-
 export const stopFields = {
   stop_id: { type: new GraphQLNonNull(GraphQLString) },
   stop_name: { type: new GraphQLNonNull(GraphQLString) },
   stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },
   stop_lon: { type: new GraphQLNonNull(GraphQLFloat) },
-  parent_station: { type: GraphQLString },
+  parent_station: {
+    type: stationType,
+    resolve: ({ parent_station }) => {
+      return db().query(aql`
+        for stop in stops
+        filter stop.stop_id == ${parent_station}
+        return stop
+      `).then(cursor => cursor.next())
+        .then(station => station );
+    }
+  },
   location_type: { type: locationTypeEnum },
   routes: {
     type: new GraphQLList(routeType),

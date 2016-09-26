@@ -16,17 +16,17 @@ export default new GraphQLObjectType({
       },
       resolve: (_, { stop_id, user_id }) => {
         return db().query(aql`
-            for favoriteStop in favoriteStops
-            filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
-            return favoriteStop
+            for favorite_stop in favorite_stops
+            filter favorite_stop.stop_id == ${stopDbId(stop_id)} && favorite_stop.user_id == ${user_id}
+            return favorite_stop
           `).then(cursor => {
             if (cursor.hasNext()) throw new GraphQLError('This stop is already in the user\'s favorites')
 
             return db().query(aql`
                 for stop in stops
                 filter stop.stop_id == ${stopDbId(stop_id)}
-                insert unset(merge([stop, {"user_id": ${user_id}, "favorite_id": concat(${user_id}, "_",stop.stop_id)}]), "_id", "_key") into favorites
-                return unset(merge([stop, {"user_id": ${user_id}, "favorite_id": concat(${user_id}, "_",stop.stop_id)}]), "_id", "_key")
+                insert {"user_id": ${user_id}, "stop_id": ${stopDbId(stop_id)}} into favorite_stops
+                return {"user_id": ${user_id}, "stop_id": ${stopDbId(stop_id)}}
                 `).then(cursor => cursor.next())
                   .then(stop => stop)
           })
@@ -40,18 +40,18 @@ export default new GraphQLObjectType({
       },
       resolve: (_, { stop_id, user_id }) => {
         return db().query(aql`
-            for favoriteStop in favoriteStops
-            filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
-            return favoriteStop
+            for favorite_stop in favorite_stops
+            filter favorite_stop.stop_id == ${stopDbId(stop_id)} && favorite_stop.user_id == ${user_id}
+            return favorite_stop
           `).then(cursor => {
             if (!cursor.hasNext()) throw new GraphQLError('This stop is not present in the user\'s favorites')
             return cursor.next()
           }).then(favorite => {
             return db().query(aql`
-                for favoriteStop in favoriteStops
-                filter favoriteStop.stop_id == ${stopDbId(stop_id)} && favoriteStop.user_id == ${user_id}
-                remove favoriteStop into favoriteStops
-                return favoriteStop
+                for favorite_stop in favorite_stops
+                filter favorite_stop.stop_id == ${stopDbId(stop_id)} && favorite_stop.user_id == ${user_id}
+                remove favorite_stop into favorite_stops
+                return favorite_stop
                 `).then(cursor => cursor.next())
                   .then(favorite => favorite)
           })

@@ -2,6 +2,7 @@ import fs from 'fs'
 import http from 'http'
 import spdy from 'spdy'
 import express from 'express'
+import cors from 'cors'
 import rest from './rest'
 import falcor from './falcor'
 import graphql from './graphql'
@@ -9,6 +10,7 @@ import errorHandlers from './error-handlers'
 
 export default port => {
   const handler = express()
+    .use(cors({origin: 'http://localhost:8000', credentials: true}))
     .get('/', (req, res) => res.send("It's working!"))
     .get('/favicon.ico', (req, res) => res.sendStatus(204))
     .use('/rest', rest)

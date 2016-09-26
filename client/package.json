@@ -31,7 +31,10 @@
     "webpack-dev-server": "1.14.1"
   },
   "dependencies": {
+    "brace": "^0.8.0",
+    "falcor": "^0.1.17",
     "react": "^15.2.1",
+    "react-ace": "^3.5.0",
     "react-dom": "^15.2.1"
   },
   "scripts": {

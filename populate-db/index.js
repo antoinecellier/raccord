@@ -1,3 +1,4 @@
+const arangojs = require('arangojs')
 const childProcess = require('child_process')
 const fs = require('fs')
 const path = require('path')
@@ -34,4 +35,7 @@ files.forEach(filePath => childProcess.execFileSync(
 
 console.log('done')
 
-createIndices()
+arangojs().collection('favorite_stops').create()
+.then(() => {
+  createIndices()
+});

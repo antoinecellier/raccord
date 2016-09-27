@@ -20,5 +20,6 @@
   {"collection": "trips", "fields": ["trip_id"], "type": "hash", "unique": true},
   {"collection": "trips", "fields": ["service_id"], "type": "hash"},
   {"collection": "favorite_stops", "fields": ["user_id"], "type": "hash"},
-  {"collection": "favorite_stops", "fields": ["stop_id"], "type": "hash"}
+  {"collection": "favorite_stops", "fields": ["stop_id"], "type": "hash"},
+  {"collection": "favorite_stops", "fields": ["user_id", "stop_id"], "type": "hash"}
 ]

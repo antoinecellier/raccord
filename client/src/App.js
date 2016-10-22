@@ -36,11 +36,11 @@ export default class App extends Component {
             <ConfigPanel />
           </div>
           <div className="row">
-            <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
-            <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
+            <FalcorPanel onResponse={response => this.handleResponse(response)} />
+            <GraphQLPanel onResponse={response => this.handleResponse(response)} />
           </div>
           <div className="row">
-            <ResponsePanel content={this.state.response} />
+            <ResponsePanel onResponse={response => this.handleResponse(response)} content={this.state.response} />
           </div>
         </div>
       </div>

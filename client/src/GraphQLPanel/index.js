@@ -27,7 +27,8 @@ export default class GraphQLPanel extends Component {
       query: null,
       queryResult: '',
       displayResponse: response => {
-        response.then(rep => this.setState({queryResult: JSON.stringify(rep.data)}));
+        response.then(rep => this.props.onResponse(rep.data));
+        //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };
   }
@@ -37,9 +38,6 @@ export default class GraphQLPanel extends Component {
       <div className="col-md-6">
         <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} />
         <button className="btn btn-primary btn-block" onClick={this.state.fetcher}>Fire GraphQL!</button>
-        <pre>
-          {this.state.queryResult}
-        </pre>
       </div>
     )
   }

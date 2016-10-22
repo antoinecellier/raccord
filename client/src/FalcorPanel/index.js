@@ -11,10 +11,14 @@ export default class FalcorPanel extends Component {
     const model = new falcor.Model({source: new falcor.HttpDataSource('https://localhost:7081/falcor')})
 
     this.state = {
-      request: ''
+      request: props.content
     }
     this.handleRequest = request => this.setState({ request })
     this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(this.props.onResponse)
+  }
+
+  componentWillReceiveProps (props) {
+    this.setState({request: JSON.stringify(props.content, null, 2)})
   }
 
   render () {

@@ -1,37 +1,45 @@
 import React, { Component } from 'react'
-import AceEditor from 'react-ace'
-import 'brace/mode/javascript'
-import 'brace/theme/github'
+import GraphiQL from 'graphiql';
+import fetch from 'isomorphic-fetch';
+import './graphiql.css';
 
 export default class GraphQLPanel extends Component {
-  constructor (props) {
-    super(props)
+  constructor(props) {
+    super(props);
 
     this.state = {
-      request: ''
-    }
-    this.handleRequest = request => {
-      this.setState({ request })
-      this.props.onChange(request)
-    }
-    this.handleExecute = () => {}
+      fetcher: (graphQLParams) => {
+        const graphQLquery = this.state.query ? {query: this.state.query, variables: "{}", OperationName: null} : graphQLParams
+        return fetch('http://127.0.0.1:7080/graphql', {
+          method: 'post',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(graphQLquery),
+        }).then(response => {
+         const rep = response.json();
+         this.state.displayResponse(rep);
+         return rep;
+       })
+      },
+      onEditQuery: query => {
+        this.setState({query})
+        // TODO: Execute query translate function
+      },
+      query: null,
+      queryResult: '',
+      displayResponse: response => {
+        response.then(rep => this.setState({queryResult: JSON.stringify(rep.data)}));
+      }
+    };
   }
 
   render () {
     return (
       <div className="col-md-6">
-        GraphQL
-        <AceEditor
-          mode="javascript"
-          theme="github"
-          name="graphql_editor"
-          fontSize={15}
-          height="8em"
-          onChange={this.handleRequest}
-          value={this.state.request}
-          editorProps={{$blockScrolling: true}}
-        />
-        <button className="btn btn-primary btn-block" onClick={this.handleExecute}>Fire GraphQL!</button>
+        <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} />
+        <button className="btn btn-primary btn-block" onClick={this.state.fetcher}>Fire GraphQL!</button>
+        <pre>
+          {this.state.queryResult}
+        </pre>
       </div>
     )
   }

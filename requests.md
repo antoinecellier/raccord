@@ -117,10 +117,12 @@
 - GraphQL
   - Recherche d'arrêts
   ```graphql
-  stations(search: query) {
-    id
-    label
-    routes { label }
+  query {
+    stations(search: "Comm", from: 0, length: 10) {
+      id
+      label
+      routes { label }
+    }
   }
   ```
 

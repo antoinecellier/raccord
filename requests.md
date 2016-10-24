@@ -91,10 +91,12 @@
 - GraphQL
   - Écran des arrêts
   ```graphql
-  stations(stationId, from, length) {
-    id
-    label
-    routes { label }
+  query {
+    stations(from: 0, length: 10) {
+      id
+      label
+      routes { label }
+    }
   }
   ```
 

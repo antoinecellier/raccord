@@ -28,18 +28,10 @@ export default class App extends Component {
   render () {
     return (
       <div>
-        <div style={{display: 'flex', flexDirection: 'column', height: '800px'}}>
-          <div style={{display: 'flex', flexDirection: 'row', flex: 1}}>
-            <div style={{flex: 1}}>
-              <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
-            </div>
-            <div style={{flex: 1}}>
-              <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
-            </div>
-          </div>
-          <div style={{flex: 1}}>
-            <ResponsePanel content={this.state.response} />
-          </div>
+        <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
+          <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
+          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
+          <ResponsePanel content={this.state.response} />
         </div>
       </div>
     )

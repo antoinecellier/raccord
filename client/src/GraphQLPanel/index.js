@@ -26,7 +26,6 @@ export default class GraphQLPanel extends Component {
           theme="github"
           name="graphql_editor"
           fontSize={15}
-          width="100px"
           height="20em"
           onChange={this.handleRequest}
           value={this.state.request}

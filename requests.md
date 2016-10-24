@@ -47,19 +47,27 @@
 - GraphQL
   - Écran des arrêts
   ```graphql
-  stations(from, length) {
-    id
-    label
+  query {
+    stations(from: 0, length: 10) {
+      id
+      label
+    }
   }
   ```
   - Écran des passages
   ```graphql
-  stops(stationId, after, from, length) {
-    id
-    station { label }
-    direction { label }
-    route { label }
-    time
+  query {
+    stops(
+        stationId: "COMM", 
+        after: "2016-11-09T10:30:00", 
+        from: 0, 
+        length: 10) {
+      id
+      station { label }
+      direction { label }
+      route { label }
+      time
+    }
   }
   ```
 

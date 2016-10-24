@@ -163,15 +163,17 @@
   ```
   - Écran des arrêts
   ```graphql
-  favoriteStations(from, length) {
-    id
-    label
-    routes { label }
-  }
-  stations(search, from, length) {
-    id
-    label
-    routes { label }
+  query {
+    favoriteStations(from: 0, length: 10) {
+      id
+      label
+      routes { label }
+    }
+    stations(search: "Comm", from: 0, length: 10) {
+      id
+      label
+      routes { label }
+    }
   }
   ```
 

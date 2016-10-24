@@ -19,14 +19,15 @@ export default class GraphQLPanel extends Component {
 
   render () {
     return (
-      <div className="col-md-6">
+      <div>
         GraphQL
         <AceEditor
           mode="javascript"
           theme="github"
           name="graphql_editor"
           fontSize={15}
-          height="8em"
+          width="100px"
+          height="20em"
           onChange={this.handleRequest}
           value={this.state.request}
           editorProps={{$blockScrolling: true}}

@@ -17,7 +17,6 @@ const routes = [
   {
     route: 'stations[{integers:indices}]',
     get: co.wrap(function* ([stations, indices]) {
-      console.log(indices)
       return indices.map(index => ({
         path: [stations, index],
         value: {$type: 'ref', value: [stations, 'alphabetical', index]}

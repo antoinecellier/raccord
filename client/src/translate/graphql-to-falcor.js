@@ -13,7 +13,12 @@ export default function translate(inputGraphQl) {
           const [fromArg] = _.remove(selection.arguments, {name: {value: "from"}})
           const [lengthArg] = _.remove(selection.arguments, {name: {value: "length"}})
           _.each(selection.arguments, arg => newSegment.push(arg.name.value, arg.value.value))
-          if (fromArg || lengthArg) newSegment.push({from: Number(fromArg.value.value), length: Number(lengthArg.value.value)})//to: Number(fromArg.value.value) + Number(lengthArg.value.value)})
+          if (fromArg || lengthArg) {
+            newSegment.push({
+              from: Number(fromArg.value.value),
+              length: Number(lengthArg.value.value)
+            })
+          }
         }
         return currentPath.concat(newSegment)
       }).reverse())

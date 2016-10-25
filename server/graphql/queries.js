@@ -28,17 +28,15 @@ export default new GraphQLObjectType({
           `).then(cursor => cursor.all())
       }
     },
-    favoriteStops: {
+    favoriteStations: {
       type: new GraphQLList(favoriteStopType),
       args: {
-        user_id: { type: new GraphQLNonNull(GraphQLString) },
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, { user_id, from, length }) => {
         return db().query(aql`
             for favorite_stop in favorite_stops
-            filter favorite_stop.user_id == ${user_id}
             limit ${from}, ${length}
             return favorite_stop
           `).then(cursor => cursor.all())

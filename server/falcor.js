@@ -4,6 +4,7 @@ import {dataSourceRoute as falcor} from 'falcor-express'
 import FalcorRouter from 'falcor-router'
 import ranges from 'falcor-router/src/operations/ranges/convertPathKeyToRange'
 import flatten from 'lodash.flatten'
+import moment from 'moment'
 import co from 'co'
 import db, {aql} from './db'
 
@@ -181,6 +182,38 @@ const routes = [
     })
   },
   {
+    route: 'stops.stationId[{keys:stationIds}].after[{keys:times}][{ranges:indices}][{keys:props}]',
+    get: co.wrap(function* ([stops, stationId, [station], after, [time], [{from, to}], props]) {
+      const afterMoment = moment(time)
+      const afterWeekday = afterMoment.format('dddd').toLowerCase()
+      const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
+      const afterTime = afterMoment.format('HH:mm:ss')
+
+      console.log(station, time, from, to, props, afterWeekday, afterDay, afterTime)
+
+      const cursor = yield db().query(aql`
+        for service in calendar
+          filter service.${afterWeekday} == 1 && service.start_date <= ${afterDay} && service.end_date >= ${afterDay}
+          for trip in trips
+            filter trip.service_id == service.service_id
+            for stop in stops
+              filter stop.parent_station == ${stationDbId(station)}
+              for stop_time in stop_times
+                filter stop_time.stop_id == stop.stop_id && stop_time.trip_id == trip.trip_id && stop_time.departure_time >= ${afterTime}
+                sort stop_time.departure_time
+                limit ${from}, ${to - from + 1}
+                return {stop_time, trip, stop}
+      `)
+
+      const stopDtos = yield cursor.map(tuple => stopDto(tuple, station))
+
+      return flatten(Array(to - from + 1).fill(0).map((zero, index) => props.map(prop => ({
+        path: [stops, stationId, station, after, time, from + index, prop],
+        value: stopDtos[index] && stopDtos[index][prop] || {$type: 'error', value: 'nothing here'}
+      }))))
+    })
+  },
+  {
     route: 'routes.byId[{keys:ids}][{keys:props}]',
     get: co.wrap(function* ([routes, byId, ids, props]) {
       const cursor = yield db().query(aql`
@@ -218,6 +251,21 @@ function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
     longitude: stop_lon
   }
 }
+
+function stopDtoId ({trip_id, stop_sequence}) {
+  return `${trip_id}/${stop_sequence}` // eslint-disable-line camelcase
+}
+
+function stopDto ({stop_time: {stop_sequence, departure_time}, trip: {trip_id, route_id, trip_headsign}}, stationId) {
+  return {
+    id: stopDtoId({trip_id, stop_sequence}),
+    time: departure_time,
+    route: {$type: 'ref', value: ['routes', 'byId', routeDtoId(route_id)]},
+    station: {$type: 'ref', value: ['stations', 'byId', stationId]},
+    direction: trip_headsign
+  }
+}
+
 
 function routeDbId (routeDtoId) {
   return routeDtoId + '-0'

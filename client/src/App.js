@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import Header from './Header'
-import ConfigPanel from './ConfigPanel'
 import FalcorPanel from './FalcorPanel'
 import GraphQLPanel from './GraphQLPanel'
 import ResponsePanel from './ResponsePanel'
@@ -30,18 +28,10 @@ export default class App extends Component {
   render () {
     return (
       <div>
-        <Header />
-        <div className="container">
-          <div className="row">
-            <ConfigPanel />
-          </div>
-          <div className="row">
-            <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
-            <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
-          </div>
-          <div className="row">
-            <ResponsePanel content={this.state.response} />
-          </div>
+        <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
+          <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
+          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
+          <ResponsePanel content={this.state.response} />
         </div>
       </div>
     )

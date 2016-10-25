@@ -24,14 +24,7 @@ export const stationType = new GraphQLObjectType({
       },
       label: {
         type: new GraphQLNonNull(GraphQLString) ,
-        resolve: ({ stop_id }) => {
-          return db().query(aql`
-            for stop in stops
-            filter stop.stop_id == ${stop_id}
-            return stop.stop_name
-          `).then(cursor => cursor.next())
-            .then(stop_name => stop_name)
-        }
+        resolve: ({ stop_name }) => stop_name
       },
       stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },
       stop_lon: { type: new GraphQLNonNull(GraphQLFloat) },
@@ -40,9 +33,15 @@ export const stationType = new GraphQLObjectType({
         type: new GraphQLList(routeType),
         resolve: ({ stop_id }) => {
           return db().query(aql`
+              let stops = (
+                for stop in stops
+                filter stop.parent_station == ${stop_id}
+                return stop.stop_id
+              )
+
               let stop_times_of_stop = (
                 for stop_time in stop_times
-                filter stop_time.stop_id == ${stop_id}
+                filter stop_time.stop_id in stops
                 return stop_time.trip_id
               )
 

@@ -15,6 +15,16 @@ const routes = [
     }
   },
   {
+    route: 'stations[{integers:indices}]',
+    get: co.wrap(function* ([stations, indices]) {
+      console.log(indices)
+      return indices.map(index => ({
+        path: [stations, index],
+        value: {$type: 'ref', value: [stations, 'alphabetical', index]}
+      }))
+    })
+  },
+  {
     route: 'stations.alphabetical[{ranges:indices}]',
     get: co.wrap(function* ([stations, alphabetical, [{from, to}]]) {
       const cursor = yield db().query(aql`
@@ -204,7 +214,7 @@ function stationDtoId (stopDbId) {
 function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
   return {
     id: stationDtoId(stop_id),
-    name: stop_name,
+    label: stop_name,
     latitude: stop_lat,
     longitude: stop_lon
   }
@@ -221,7 +231,7 @@ function routeDtoId (routeDbId) {
 function routeDto ({route_id, route_short_name, route_long_name}) {
   return {
     id: routeDtoId(route_id),
-    shortName: String(route_short_name),
+    label: String(route_short_name),
     longName: route_long_name
   }
 }

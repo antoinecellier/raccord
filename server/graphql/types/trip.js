@@ -8,8 +8,11 @@ export const tripType = new GraphQLObjectType({
     fields: () => ({
       trip_id: { type: new GraphQLNonNull(GraphQLString) },
       service_id: { type: new GraphQLNonNull(GraphQLString) },
-      trip_headsign: { type: GraphQLString },
       direction_id: { type: GraphQLInt },
+      label: {
+        type: GraphQLString,
+        resolve: ({ trip_headsign }) => trip_headsign
+      },
       route: {
         type: new GraphQLNonNull(routeType),
         resolve: ({ route_id }) => {
@@ -23,3 +26,5 @@ export const tripType = new GraphQLObjectType({
        }
     })
 })
+
+//trip_headsign

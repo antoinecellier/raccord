@@ -19,7 +19,17 @@ export const stationType = new GraphQLObjectType({
     name: 'Station',
     fields: () => ({
       stop_id: { type: new GraphQLNonNull(GraphQLString) },
-      stop_name: { type: new GraphQLNonNull(GraphQLString) },
+      label: {
+        type: new GraphQLNonNull(GraphQLString) ,
+        resolve: ({ stop_id }) => {
+          return db().query(aql`
+            for stop in stops
+            filter stop.stop_id == ${stop_id}
+            return stop.stop_name
+          `).then(cursor => cursor.next())
+            .then(stop_name => stop_name)
+        }
+      },
       stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },
       stop_lon: { type: new GraphQLNonNull(GraphQLFloat) },
       location_type: { type: locationTypeEnum },

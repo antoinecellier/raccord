@@ -64,12 +64,12 @@ export default new GraphQLObjectType({
     stopTimes: {
       type: new GraphQLList(stopTimeType),
       args: {
-        station: { type: new GraphQLNonNull(GraphQLString) },
+        stationId: { type: new GraphQLNonNull(GraphQLString) },
         after: { type: new GraphQLNonNull(GraphQLString) },
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
-      resolve: (_, {station, after, from, length}) => {
+      resolve: (_, {stationId, after, from, length}) => {
         const afterMoment = moment(after)
         const afterWeekday = afterMoment.format('dddd').toLowerCase()
         const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
@@ -87,7 +87,7 @@ export default new GraphQLObjectType({
 
           let children_stops = (
             for stop in stops
-            filter stop.stop_id == ${stopDbId(station)}
+            filter stop.parent_station == ${stationDbId(stationId)}
             return stop.stop_id)
 
           for stop_time in stop_times
@@ -95,7 +95,8 @@ export default new GraphQLObjectType({
           sort stop_time.departure_time
           limit ${from}, ${length}
           return stop_time
-        `).then(cursor => cursor.all())
+        `).then(cursor => {
+          return cursor.all()})
       }
     }
   })

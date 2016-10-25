@@ -18,27 +18,10 @@ export default new GraphQLObjectType({
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
-      resolve: (_, { search, from, length }) => {
+      resolve: (_, { search = "", from, length }) => {
         return db().query(aql`
             for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
             filter stop.location_type == 1
-            sort stop.stop_name asc
-            limit ${from}, ${length}
-            return stop
-          `).then(cursor => cursor.all())
-      }
-    },
-    stops: {
-      type: new GraphQLList(stopType),
-      args: {
-        search: { type: GraphQLString },
-        from: { type: new GraphQLNonNull(GraphQLInt) },
-        length: { type: new GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: (_, { search, from, length }) => {
-        return db().query(aql`
-            for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
-            filter stop.location_type == 0
             sort stop.stop_name asc
             limit ${from}, ${length}
             return stop
@@ -61,7 +44,7 @@ export default new GraphQLObjectType({
           `).then(cursor => cursor.all())
       }
     },
-    stopTimes: {
+    stops: {
       type: new GraphQLList(stopTimeType),
       args: {
         stationId: { type: new GraphQLNonNull(GraphQLString) },

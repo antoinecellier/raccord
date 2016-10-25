@@ -18,7 +18,10 @@ export const locationTypeEnum = new GraphQLEnumType({
 export const stationType = new GraphQLObjectType({
     name: 'Station',
     fields: () => ({
-      stop_id: { type: new GraphQLNonNull(GraphQLString) },
+      id: {
+        type: new GraphQLNonNull(GraphQLString),
+        resolve: ({ stop_id }) => stop_id
+      },
       label: {
         type: new GraphQLNonNull(GraphQLString) ,
         resolve: ({ stop_id }) => {

@@ -29,7 +29,7 @@ export function routeDtoId (routeDbId) {
 export function routeDto ({route_id, route_short_name, route_long_name}) {
   return {
     href: routeDtoId(route_id),
-    shortName: String(route_short_name),
-    longName: route_long_name
+    label: String(route_short_name),
+    trip: route_long_name
   }
 }

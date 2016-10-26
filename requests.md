@@ -64,7 +64,7 @@
         length: 10) {
       id
       station { label }
-      direction { label }
+      direction
       route { label }
       time
     }

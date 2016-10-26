@@ -20,10 +20,10 @@ export const stationType = new GraphQLObjectType({
     fields: () => ({
       id: {
         type: new GraphQLNonNull(GraphQLString),
-        resolve: ({ stop_id }) => stop_id
+        resolve: ({ stop_id }) => stop_id.split(':')[1]
       },
       label: {
-        type: new GraphQLNonNull(GraphQLString) ,
+        type: new GraphQLNonNull(GraphQLString),
         resolve: ({ stop_name }) => stop_name
       },
       stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },

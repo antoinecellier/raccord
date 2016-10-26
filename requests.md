@@ -39,7 +39,8 @@
   - Écran des passages
   ```js
   [
-    ["stops", stationId, after, {from, length}, ["station", "direction", "route"], "label"],
+    ["stops", stationId, after, {from, length}, ["station",, "route"], "label"],
+    ["stops", stationId, after, {from, length}, "direction"],
     ["stops", stationId, after, {from, length}, ["id", "time"]],
   ]
   ```

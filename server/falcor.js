@@ -279,7 +279,7 @@ function routeDto ({route_id, route_short_name, route_long_name}) {
   return {
     id: routeDtoId(route_id),
     label: String(route_short_name),
-    longName: route_long_name
+    trip: route_long_name
   }
 }
 

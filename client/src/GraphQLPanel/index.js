@@ -19,7 +19,6 @@ export default class GraphQLPanel extends Component {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(graphQLquery),
         }).then(response => response.json())
-          .then(rep => {
             if(!rep.data.__schema){
               this.state.displayResponse(rep)
             }

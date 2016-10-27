@@ -18,7 +18,7 @@
     arial,
     sans-serif;
   font-size: 14px;
-  height: 100%;
+  height: 680px;
   margin: 0;
   overflow: hidden;
   width: 100%;
@@ -114,8 +114,8 @@
 .graphiql-container .queryWrap {
   display: -webkit-flex;
   display:         flex;
-  -webkit-flex: 1;
-          flex: 1;
+  -webkit-flex: 2.85 !important;
+          flex: 2.85 !important;
   -webkit-flex-direction: column;
           flex-direction: column;
 }

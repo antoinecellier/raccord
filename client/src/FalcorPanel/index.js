@@ -24,14 +24,13 @@ export default class FalcorPanel extends Component {
   render () {
     return (
       <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-        Falcor
         <AceEditor
           mode="javascript"
           theme="github"
           name="falcor_editor"
           fontSize={15}
           width="400px"
-          height="40em"
+          height="680px"
           onChange={this.handleRequest}
           value={this.state.request}
           editorProps={{$blockScrolling: true}}

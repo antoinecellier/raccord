@@ -14,9 +14,7 @@ export default class GraphQLPanel extends Component {
           method: 'post',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(graphQLquery),
-        }).then(response => {
-          return response.json()
-        })
+        }).then(response => response.json())
           .then(rep => {
             if(!rep.data.__schema){
               this.state.displayResponse(rep)
@@ -35,8 +33,6 @@ export default class GraphQLPanel extends Component {
         //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };
-
-    console.log(this.state.query)
   }
 
   render () {

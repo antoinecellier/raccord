@@ -10,24 +10,31 @@ export default class GraphQLPanel extends Component {
     this.state = {
       fetcher: (graphQLParams) => {
         const graphQLquery = this.state.query ? {query: this.state.query, variables: "{}", OperationName: null} : graphQLParams
+        console.log(graphQLquery)
         return fetch('http://127.0.0.1:7080/graphql', {
           method: 'post',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(graphQLquery),
         }).then(response => {
-         const rep = response.json();
-         this.state.displayResponse(rep);
-         return rep;
-       })
+          return response.json()
+        })
+          .then(rep => {
+            if(!rep.data.__schema){
+              this.state.displayResponse(rep)
+            }
+            return rep;
+          })
       },
       onEditQuery: query => {
+        console.log(query);
         this.setState({query})
         // TODO: Execute query translate function
       },
       query: null,
       queryResult: '',
       displayResponse: response => {
-        response.then(rep => this.props.onResponse(rep.data));
+        console.log(response);
+        this.props.onResponse(response.data);
         //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };

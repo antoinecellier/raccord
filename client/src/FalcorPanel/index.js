@@ -23,14 +23,15 @@ export default class FalcorPanel extends Component {
 
   render () {
     return (
-      <div className="col-md-6">
+      <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
         Falcor
         <AceEditor
           mode="javascript"
           theme="github"
           name="falcor_editor"
           fontSize={15}
-          height="8em"
+          width="200px"
+          height="68em"
           onChange={this.handleRequest}
           value={this.state.request}
           editorProps={{$blockScrolling: true}}

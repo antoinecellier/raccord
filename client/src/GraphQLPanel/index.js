@@ -15,19 +15,24 @@ export default class GraphQLPanel extends Component {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(graphQLquery),
         }).then(response => {
-         const rep = response.json();
-         this.state.displayResponse(rep);
-         return rep;
-       })
+          return response.json()
+        })
+          .then(rep => {
+            if(!rep.data.__schema){
+              this.state.displayResponse(rep)
+            }
+            return rep;
+          })
       },
       onEditQuery: query => {
         this.setState({query})
+        this.props.onChange(query);
         // TODO: Execute query translate function
       },
       query: null,
       queryResult: '',
       displayResponse: response => {
-        response.then(rep => this.props.onResponse(rep.data));
+        this.props.onResponse(response.data);
         //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };
@@ -35,7 +40,7 @@ export default class GraphQLPanel extends Component {
 
   render () {
     return (
-      <div className="col-md-6">
+      <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
         <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} />
         <button className="btn btn-primary btn-block" onClick={this.state.fetcher}>Fire GraphQL!</button>
       </div>

@@ -10,7 +10,6 @@ export default class GraphQLPanel extends Component {
     this.state = {
       fetcher: (graphQLParams) => {
         const graphQLquery = this.state.query ? {query: this.state.query, variables: "{}", OperationName: null} : graphQLParams
-        console.log(graphQLquery)
         return fetch('http://127.0.0.1:7080/graphql', {
           method: 'post',
           headers: { 'Content-Type': 'application/json' },
@@ -26,18 +25,18 @@ export default class GraphQLPanel extends Component {
           })
       },
       onEditQuery: query => {
-        console.log(query);
         this.setState({query})
         // TODO: Execute query translate function
       },
       query: null,
       queryResult: '',
       displayResponse: response => {
-        console.log(response);
         this.props.onResponse(response.data);
         //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };
+
+    console.log(this.state.query)
   }
 
   render () {

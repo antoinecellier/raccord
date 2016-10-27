@@ -14,7 +14,7 @@ export default class FalcorPanel extends Component {
       request: props.content
     }
     this.handleRequest = request => this.setState({ request })
-    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(this.props.onResponse)
+    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(response => response.json).then(this.props.onResponse)
   }
 
   componentWillReceiveProps (props) {

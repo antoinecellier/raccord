@@ -18,7 +18,7 @@ export default new GraphQLObjectType({
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
-      resolve: (_, { search, from, length }) => {
+      resolve: (_, { search = "", from, length }) => {
         return db().query(aql`
             for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
             filter stop.location_type == 1
@@ -28,48 +28,29 @@ export default new GraphQLObjectType({
           `).then(cursor => cursor.all())
       }
     },
-    stops: {
-      type: new GraphQLList(stopType),
-      args: {
-        search: { type: GraphQLString },
-        from: { type: new GraphQLNonNull(GraphQLInt) },
-        length: { type: new GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: (_, { search, from, length }) => {
-        return db().query(aql`
-            for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
-            filter stop.location_type == 0
-            sort stop.stop_name asc
-            limit ${from}, ${length}
-            return stop
-          `).then(cursor => cursor.all())
-      }
-    },
-    favoriteStops: {
+    favoriteStations: {
       type: new GraphQLList(favoriteStopType),
       args: {
-        user_id: { type: new GraphQLNonNull(GraphQLString) },
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
       resolve: (_, { user_id, from, length }) => {
         return db().query(aql`
             for favorite_stop in favorite_stops
-            filter favorite_stop.user_id == ${user_id}
             limit ${from}, ${length}
             return favorite_stop
           `).then(cursor => cursor.all())
       }
     },
-    stopTimes: {
+    stops: {
       type: new GraphQLList(stopTimeType),
       args: {
-        station: { type: new GraphQLNonNull(GraphQLString) },
+        stationId: { type: new GraphQLNonNull(GraphQLString) },
         after: { type: new GraphQLNonNull(GraphQLString) },
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
-      resolve: (_, {station, after, from, length}) => {
+      resolve: (_, {stationId, after, from, length}) => {
         const afterMoment = moment(after)
         const afterWeekday = afterMoment.format('dddd').toLowerCase()
         const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
@@ -87,7 +68,7 @@ export default new GraphQLObjectType({
 
           let children_stops = (
             for stop in stops
-            filter stop.stop_id == ${stopDbId(station)}
+            filter stop.parent_station == ${stationDbId(stationId)}
             return stop.stop_id)
 
           for stop_time in stop_times
@@ -95,7 +76,8 @@ export default new GraphQLObjectType({
           sort stop_time.departure_time
           limit ${from}, ${length}
           return stop_time
-        `).then(cursor => cursor.all())
+        `).then(cursor => {
+          return cursor.all()})
       }
     }
   })

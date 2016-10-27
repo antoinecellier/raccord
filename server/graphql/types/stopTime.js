@@ -14,14 +14,14 @@ export const stopTimeType = new GraphQLObjectType({
         resolve: ({ _id }) => _id
       },
       direction: {
-        type: new GraphQLNonNull(tripType),
+        type: new GraphQLNonNull(GraphQLString),
         resolve: ({ trip_id }) => {
           return db().query(aql`
             for trip in trips
             filter trip.trip_id == ${trip_id}
             return trip
             `).then(cursor => cursor.next())
-              .then(direction => direction)
+              .then(trip => trip.trip_headsign)
         }
       },
       route: {

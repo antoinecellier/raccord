@@ -9,14 +9,16 @@ export default class GraphQLPanel extends Component {
 
     this.state = {
       fetcher: (graphQLParams) => {
-        const graphQLquery = this.state.query ? {query: this.state.query, variables: "{}", OperationName: null} : graphQLParams
+        if(this.state.query){
+          const graphQLquery = {query: this.state.query, variables: "{}", OperationName: null}
+        } else {
+          const graphQLquery = graphQLParams
+        }
         return fetch('http://127.0.0.1:7080/graphql', {
           method: 'post',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(graphQLquery),
-        }).then(response => {
-          return response.json()
-        })
+        }).then(response => response.json())
           .then(rep => {
             if(!rep.data.__schema){
               this.state.displayResponse(rep)
@@ -27,13 +29,11 @@ export default class GraphQLPanel extends Component {
       onEditQuery: query => {
         this.setState({query})
         this.props.onChange(query);
-        // TODO: Execute query translate function
       },
       query: null,
       queryResult: '',
       displayResponse: response => {
         this.props.onResponse(response.data);
-        //this.setState({queryResult: JSON.stringify(rep.data)})
       }
     };
   }

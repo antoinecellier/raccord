@@ -17,7 +17,6 @@ export default class App extends Component {
   }
 
   tryTranslateGraphQL(request) {
-    console.log(request)
     try {
       const falcorRequest = translateGraphQlToFalcor(request)
       this.setState({falcorRequest})
@@ -25,9 +24,6 @@ export default class App extends Component {
       console.error(e)
     }
   }
-
-
-  // <GraphQLPanel onResponse={response => this.handleResponse(response)} />
 
   render () {
     return (

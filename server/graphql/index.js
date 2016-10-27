@@ -8,4 +8,4 @@ import mutation from './mutations'
 const schema = new GraphQLSchema({query, mutation})
 
 export default express.Router()
-  .use('/', graphqlHTTP({ schema , pretty: true, graphiql: false}));
+  .use('/', graphqlHTTP({schema , pretty: true, graphiql: false}));

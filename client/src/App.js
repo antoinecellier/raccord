@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import Header from './Header'
-import ConfigPanel from './ConfigPanel'
 import FalcorPanel from './FalcorPanel'
 import GraphQLPanel from './GraphQLPanel'
 import ResponsePanel from './ResponsePanel'
@@ -19,6 +17,7 @@ export default class App extends Component {
   }
 
   tryTranslateGraphQL(request) {
+    console.log(request)
     try {
       const falcorRequest = translateGraphQlToFalcor(request)
       this.setState({falcorRequest})
@@ -27,21 +26,16 @@ export default class App extends Component {
     }
   }
 
+
+  // <GraphQLPanel onResponse={response => this.handleResponse(response)} />
+
   render () {
     return (
       <div>
-        <Header />
-        <div className="container">
-          <div className="row">
-            <ConfigPanel />
-          </div>
-          <div className="row">
-            <FalcorPanel onResponse={response => this.handleResponse(response)} />
-            <GraphQLPanel onResponse={response => this.handleResponse(response)} />
-          </div>
-          <div className="row">
-            <ResponsePanel onResponse={response => this.handleResponse(response)} content={this.state.response} />
-          </div>
+        <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
+          <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
+          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => this.handleResponse(response)} />
+          <ResponsePanel content={this.state.response} />
         </div>
       </div>
     )

@@ -31,7 +31,6 @@
           flex-direction: column;
   -webkit-flex: 1;
           flex: 1;
-  height: 300px;
 }
 
 .graphiql-container .title {

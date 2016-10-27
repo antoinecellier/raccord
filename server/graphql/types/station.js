@@ -1,4 +1,4 @@
-import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType, GraphQLList } from 'graphql'
+import { GraphQLInt, GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType, GraphQLList } from 'graphql'
 import db, {aql} from '../../db'
 
 import {routeType} from './route'
@@ -31,7 +31,11 @@ export const stationType = new GraphQLObjectType({
       location_type: { type: locationTypeEnum },
       routes: {
         type: new GraphQLList(routeType),
-        resolve: ({ stop_id }) => {
+        args: {
+          from: { type: new GraphQLNonNull(GraphQLInt) },
+          length: { type: new GraphQLNonNull(GraphQLInt) }
+        },
+        resolve: ({ stop_id }, {from, length}) => {
           return db().query(aql`
               let stops = (
                 for stop in stops
@@ -53,6 +57,7 @@ export const stationType = new GraphQLObjectType({
 
               for route in routes
               filter route.route_id in routes_of_stops
+              limit ${from}, ${length}
               return route
             `).then(cursor => cursor.all())
         }

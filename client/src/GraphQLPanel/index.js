@@ -10,9 +10,9 @@ export default class GraphQLPanel extends Component {
     this.state = {
       fetcher: (graphQLParams) => {
         if(this.state.query){
-          const graphQLquery = {query: this.state.query, variables: "{}", OperationName: null}
+          var graphQLquery = {query: this.state.query, variables: "{}", OperationName: null}
         } else {
-          const graphQLquery = graphQLParams
+          var graphQLquery = graphQLParams
         }
         return fetch('http://127.0.0.1:7080/graphql', {
           method: 'post',

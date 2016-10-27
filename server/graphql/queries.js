@@ -29,12 +29,13 @@ export default new GraphQLObjectType({
       }
     },
     favoriteStations: {
-      type: new GraphQLList(favoriteStopType),
+      type: new GraphQLList(stopType),
       args: {
+        user: { type: new GraphQLNonNull(GraphQLString) },
         from: { type: new GraphQLNonNull(GraphQLInt) },
         length: { type: new GraphQLNonNull(GraphQLInt) }
       },
-      resolve: (_, { user_id, from, length }) => {
+      resolve: (_, { user, from, length }) => {
         return db().query(aql`
             for favorite_stop in favorite_stops
             limit ${from}, ${length}
@@ -77,7 +78,8 @@ export default new GraphQLObjectType({
           limit ${from}, ${length}
           return stop_time
         `).then(cursor => {
-          return cursor.all()})
+          return cursor.all()
+        })
       }
     }
   })

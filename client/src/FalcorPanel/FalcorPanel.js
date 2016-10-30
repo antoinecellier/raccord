@@ -2,6 +2,10 @@ import React, { Component } from 'react'
 import JsonEditor from './JsonEditor'
 
 export default class FalcorPanel extends Component {
+  constructor(props) {
+    super(props)
+  }
+
   handleRequestChange (newRequest) {
     this.props.onRequestChange(newRequest)
   }

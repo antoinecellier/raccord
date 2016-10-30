@@ -4,6 +4,7 @@ import GraphQLPanel from './GraphQLPanel'
 import ResponsePanel from './ResponsePanel'
 import translateGraphQlToFalcor from './translate/graphql-to-falcor'
 import falcor from 'falcor/dist/falcor.all'
+import translateFalcorToGraphQl from './translate/falcor-to-graphql'
 import './App.css'
 
 export default class App extends Component {
@@ -18,6 +19,14 @@ export default class App extends Component {
     }
   }
 
+  componentWillUpdate(nextProps, nextState) {
+    console.log(nextState)
+  }
+
+  handleResponse(response) {
+    this.setState({response})
+  }
+
   tryTranslateGraphQlToFalcor(request) {
     try {
       const translated = translateGraphQlToFalcor(request)
@@ -27,16 +36,28 @@ export default class App extends Component {
     }
   }
 
-  handleFalcorRequestChanged(request) {
+  updateFalcorRequest(request) {
     this.setState(prevState => ({
       falcor: Object.assign({}, prevState.falcor, {request})
     }))
   }
 
+  updateGraphqlRequest(request) {
+    this.setState({graphql: request})
+  }
+
+  handleFalcorRequestChanged(request) {
+    this.updateFalcorRequest(request);
+
+    const {err, translated} = this.tryTranslateFalcor(request);
+    if (err) return console.error(err)
+    else this.updateGraphqlRequest(translated)
+  }
+
   handleGraphQlRequestChanged(request) {
     const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
     if (err) return console.error(err)
-    else this.handleFalcorRequestChanged(translated)
+    else this.updateFalcorRequest(translated)
   }
 
   handleRequestFired(request) {
@@ -47,8 +68,17 @@ export default class App extends Component {
     this.setState({response})
   }
 
+  tryTranslateFalcor(request) {
+    try {
+      const translated = translateFalcorToGraphQl(request)
+      return {translated}
+    } catch (err) {
+      return {err}
+    }
+  }
+
   render () {
-    const falcor = this.state.falcor
+    const {falcor, graphql} = this.state
     return (
       <div>
         <div style={{display: 'flex', flexDirection: 'row', height: '100vh'}}>
@@ -59,6 +89,7 @@ export default class App extends Component {
             onRequestFired={request => this.handleRequestFired(request)}
             onResponse={response => this.handleResponse(response)} />
           <GraphQLPanel
+            content={graphql}
             onChange={request => this.handleGraphQlRequestChanged(request)}
             onRequestFired={request => this.handleRequestFired(request)}
             onResponse={response => this.handleResponse(response)} />

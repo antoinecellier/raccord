@@ -26,10 +26,11 @@ export default class GraphQLPanel extends Component {
           })
       },
       onEditQuery: query => {
+        console.log(query)
         this.setState({query})
         this.props.onChange(query);
       },
-      query: null,
+      query: props.content,
       queryResult: '',
       displayResponse: response => {
         this.props.onResponse(response.data);
@@ -37,10 +38,23 @@ export default class GraphQLPanel extends Component {
     };
   }
 
+  componentDidMount() {
+    for(const node of document.querySelectorAll('.cm-s-graphiql textarea')) {
+      node.onfocus = () => this.setState({focused: true})
+      node.onblur = () => this.setState({focused: false})
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(!this.state.focused) {
+      this.setState({ query: nextProps.content})
+    }
+  }
+
   render () {
     return (
       <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-        <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} />
+        <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} query={this.state.query} />
         <button className="btn btn-primary btn-block" onClick={this.state.fetcher}>Fire GraphQL!</button>
       </div>
     )

@@ -33,7 +33,9 @@
   "dependencies": {
     "brace": "^0.8.0",
     "falcor": "^0.1.17",
-    "graphql": "^0.7.1",
+    "graphiql": "^0.7.8",
+    "graphql": "^0.7.0",
+    "isomorphic-fetch": "^2.2.1",
     "react": "^15.2.1",
     "react-ace": "^3.5.0",
     "react-dom": "^15.2.1"

@@ -14,7 +14,7 @@ export default class FalcorPanel extends Component {
       request: props.content
     }
     this.handleRequest = request => this.setState({ request })
-    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(this.props.onResponse)
+    this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(response => response.json).then(this.props.onResponse)
   }
 
   componentWillReceiveProps (props) {
@@ -24,14 +24,13 @@ export default class FalcorPanel extends Component {
   render () {
     return (
       <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-        Falcor
         <AceEditor
           mode="javascript"
           theme="github"
           name="falcor_editor"
           fontSize={15}
-          width="200px"
-          height="68em"
+          width="400px"
+          height="680px"
           onChange={this.handleRequest}
           value={this.state.request}
           editorProps={{$blockScrolling: true}}

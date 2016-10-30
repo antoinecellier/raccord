@@ -30,7 +30,7 @@ export default class App extends Component {
       <div>
         <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
           <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
-          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} />
+          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => this.handleResponse(response)} />
           <ResponsePanel content={this.state.response} />
         </div>
       </div>

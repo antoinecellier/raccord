@@ -3,26 +3,33 @@ import _ from "lodash"
 
 export default function translate(inputGraphQl) {
   const parsedGraphQl = parse(inputGraphQl)
-  let falcor = []
-  _.cloneDeepWith(parsedGraphQl, value => {
-    if (_.get(value, "kind") === "SelectionSet") {
-      const currentPath = falcor.shift() || []
-      falcor = falcor.concat(_.map(value.selections, selection => {
-        const newSegment = [selection.name.value]
-        if (selection.arguments) {
-          const [fromArg] = _.remove(selection.arguments, {name: {value: "from"}})
-          const [lengthArg] = _.remove(selection.arguments, {name: {value: "length"}})
-          _.each(selection.arguments, arg => newSegment.push(arg.name.value, arg.value.value))
-          if (fromArg || lengthArg) {
-            newSegment.push({
-              from: Number(fromArg.value.value),
-              length: Number(lengthArg.value.value)
-            })
-          }
-        }
-        return currentPath.concat(newSegment)
-      }).reverse())
+
+  function translateNode(node) {
+    switch (node.kind) {
+      case 'Document': return translateNode(node.definitions[0])
+      case 'OperationDefinition': return translateNode(node.selectionSet)
+      case 'Field': return visitField(node)
+      case 'SelectionSet': return _.flatMap(node.selections, translateNode)
+      default: throw new Error('unknown kind: ' + node.kind)
     }
-  })
-  return falcor
+
+    function visitField(node) {
+      const subtree = node.selectionSet ? translateNode(node.selectionSet) : [[]]
+      const range = buildRange(node.arguments)
+      const args = _.flatMap(node.arguments, arg => [arg.name.value, arg.value.value])
+      return _.map(subtree, path => [node.name.value, ...args, ...range, ...path])
+    }
+
+    function buildRange(args) {
+      const [fromArg] = _.remove(args, {name: {value: 'from'}})
+      const [lengthArg] = _.remove(args, {name: {value: 'length'}})
+      if (!fromArg && !lengthArg) return []
+      const range = {}
+      if (fromArg) range.from = fromArg.value.value
+      if (lengthArg) range.length = lengthArg.value.value
+      return [range]
+    }
+  }
+
+  return translateNode(parsedGraphQl)
 }

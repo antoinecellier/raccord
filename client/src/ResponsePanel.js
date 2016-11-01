@@ -8,7 +8,7 @@ export default class ResponsePanel extends Component {
           value={JSON.stringify(this.props.content, null, 2)}
           readOnly
           className="form-control"
-          style={{height: null, flex: 1, fontFamily: 'monospace'}} />
+          style={{flex: 1, fontFamily: 'monospace'}} />
       </div>
     )
   }

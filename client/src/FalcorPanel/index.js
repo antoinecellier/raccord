@@ -13,7 +13,15 @@ export default class FalcorPanel extends Component {
     this.state = {
       request: props.content
     }
-    this.handleRequest = request => this.setState({ request })
+    this.handleRequest = request => {
+      this.setState({ request })
+      try {
+        const req = JSON.parse(request)
+        this.props.onChange(req)
+      } catch (err) {
+        // ignore invalid JSON
+      }
+    }
     this.handleExecute = () => model.get(...JSON.parse(this.state.request)).then(response => response.json).then(this.props.onResponse)
   }
 

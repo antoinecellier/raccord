@@ -12,6 +12,10 @@ export default class App extends Component {
     }
   }
 
+  handleFalcorRequestChange(request) {
+    this.setState({falcorRequest: request})
+  }
+
   handleResponse(response) {
     this.setState({response})
   }
@@ -29,7 +33,7 @@ export default class App extends Component {
     return (
       <div>
         <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
-          <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} />
+          <FalcorPanel content={this.state.falcorRequest} onResponse={response => this.handleResponse(response)} onChange={request => this.handleFalcorRequestChange(request)} />
           <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => this.handleResponse(response)} />
           <ResponsePanel content={this.state.response} />
         </div>

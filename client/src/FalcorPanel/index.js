@@ -8,7 +8,7 @@ import falcor from 'falcor/dist/falcor.all'
 export default class FalcorPanel extends Component {
   constructor (props) {
     super(props)
-    const model = new falcor.Model({source: new falcor.HttpDataSource('https://localhost:7081/falcor')})
+    const model = new falcor.Model({source: new falcor.HttpDataSource('http://localhost:7080/falcor')})
 
     this.state = {
       request: props.content

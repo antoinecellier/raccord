@@ -51,6 +51,7 @@ export default class JsonEditor extends Component {
         onFocus={() => this.handleFocus()}
         onBlur={() => this.handleBlur()}
         editorProps={{$blockScrolling: Infinity}}
+        style={{flex: 1, width: null, height: null}}
       />
     )
   }

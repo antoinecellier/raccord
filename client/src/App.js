@@ -32,7 +32,7 @@ export default class App extends Component {
     const falcor = this.state.falcor
     return (
       <div>
-        <div style={{display: 'flex', flexDirection: 'row', height: '70em'}}>
+        <div style={{display: 'flex', flexDirection: 'row', height: '100vh'}}>
           <FalcorPanel
             model={falcor.model}
             request={falcor.request}

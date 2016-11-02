@@ -45,6 +45,6 @@
   "scripts": {
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
-    "test": "node src/translate/g2f.js | faucet"
+    "test": "node src/translate/graphql-to-falcor.test.js | faucet"
   }
 }

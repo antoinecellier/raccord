@@ -13,7 +13,7 @@ export default class App extends Component {
         model: new falcor.Model({source: new falcor.HttpDataSource('http://localhost:7080/falcor')}),
         request: [[]],
       },
-      response: 'Nothing to display here yet. Fire a request and the response will be displayed here!',
+      response: 'none',
     }
   }
 

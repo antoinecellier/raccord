@@ -9,6 +9,7 @@ export default class GraphQLPanel extends Component {
 
     this.state = {
       fetcher: (graphQLParams) => {
+        if (this.props.onRequestFired) this.props.onRequestFired(this.state.query)
         const graphQLquery = this.state.query ?
           {query: this.state.query, variables: '{}', OperationName: null} :
           graphQLParams

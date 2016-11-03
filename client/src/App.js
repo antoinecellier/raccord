@@ -13,6 +13,7 @@ export default class App extends Component {
         model: new falcor.Model({source: new falcor.HttpDataSource('http://localhost:7080/falcor')}),
         request: [[]],
         handleRequestChange: request => this.setState(prevState => ({falcor: Object.assign({}, prevState.falcor, {request})})),
+        handleRequestFired: () => this.setState({response: undefined}),
         handleResponse: response => this.setState({response}),
       },
       response: ''
@@ -37,9 +38,13 @@ export default class App extends Component {
             model={falcor.model}
             request={falcor.request}
             onRequestChange={request => falcor.handleRequestChange(request)}
+            onRequestFired={request => falcor.handleRequestFired(request)}
             onResponse={response => falcor.handleResponse(response)} />
-          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => falcor.handleResponse(response)} />
-          <ResponsePanel content={this.state.response} />
+          <GraphQLPanel
+            onChange={request => this.tryTranslateGraphQL(request)}
+            onRequestFired={request => falcor.handleRequestFired(request)}
+            onResponse={response => falcor.handleResponse(response)} />
+          <ResponsePanel content={this.state.response} style={{flex: 1}} />
         </div>
       </div>
     )

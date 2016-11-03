@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
+import loader from 'hoc-react-loader'
 
-export default class ResponsePanel extends Component {
+export default loader(class ResponsePanel extends Component {
   render () {
     return (
       <div style={{display: 'flex', flex: 1}}>
@@ -12,4 +13,4 @@ export default class ResponsePanel extends Component {
       </div>
     )
   }
-}
+}, {wait: ['content']})

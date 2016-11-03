@@ -12,21 +12,38 @@ export default class App extends Component {
       falcor: {
         model: new falcor.Model({source: new falcor.HttpDataSource('http://localhost:7080/falcor')}),
         request: [[]],
-        handleRequestChange: request => this.setState(prevState => ({falcor: Object.assign({}, prevState.falcor, {request})})),
-        handleRequestFired: () => this.setState({response: undefined}),
-        handleResponse: response => this.setState({response}),
       },
-      response: ''
+      response: '',
     }
   }
 
-  tryTranslateGraphQL(request) {
+  tryTranslateGraphQlToFalcor(request) {
     try {
-      const falcorRequest = translateGraphQlToFalcor(request)
-      this.state.falcor.handleRequestChange(falcorRequest)
-    } catch (e) {
-      console.error(e)
+      const translated = translateGraphQlToFalcor(request)
+      return {translated}
+    } catch (err) {
+      return {err}
     }
+  }
+
+  handleFalcorRequestChanged(request) {
+    this.setState(prevState => ({
+      falcor: Object.assign({}, prevState.falcor, {request})
+    }))
+  }
+
+  handleGraphQlRequestChanged(request) {
+    const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
+    if (err) return console.error(err)
+    else this.handleFalcorRequestChanged(translated)
+  }
+
+  handleRequestFired(request) {
+    this.setState({response: undefined})
+  }
+
+  handleResponse(response) {
+    this.setState({response})
   }
 
   render () {
@@ -37,13 +54,13 @@ export default class App extends Component {
           <FalcorPanel
             model={falcor.model}
             request={falcor.request}
-            onRequestChange={request => falcor.handleRequestChange(request)}
-            onRequestFired={request => falcor.handleRequestFired(request)}
-            onResponse={response => falcor.handleResponse(response)} />
+            onRequestChange={request => this.handleFalcorRequestChanged(request)}
+            onRequestFired={request => this.handleRequestFired(request)}
+            onResponse={response => this.handleResponse(response)} />
           <GraphQLPanel
-            onChange={request => this.tryTranslateGraphQL(request)}
-            onRequestFired={request => falcor.handleRequestFired(request)}
-            onResponse={response => falcor.handleResponse(response)} />
+            onChange={request => this.handleGraphQlRequestChanged(request)}
+            onRequestFired={request => this.handleRequestFired(request)}
+            onResponse={response => this.handleResponse(response)} />
           <ResponsePanel content={this.state.response} style={{flex: 1}} />
         </div>
       </div>

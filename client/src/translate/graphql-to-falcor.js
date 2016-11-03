@@ -25,8 +25,8 @@ export default function translate(inputGraphQl) {
       const [lengthArg] = _.remove(args, {name: {value: 'length'}})
       if (!fromArg && !lengthArg) return []
       const range = {}
-      if (fromArg) range.from = fromArg.value.value
-      if (lengthArg) range.length = lengthArg.value.value
+      if (fromArg) range.from = Number(fromArg.value.value)
+      if (lengthArg) range.length = Number(lengthArg.value.value)
       return [range]
     }
   }

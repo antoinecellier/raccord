@@ -61,7 +61,7 @@ export default class App extends Component {
             onChange={request => this.handleGraphQlRequestChanged(request)}
             onRequestFired={request => this.handleRequestFired(request)}
             onResponse={response => this.handleResponse(response)} />
-          <ResponsePanel content={this.state.response} style={{flex: 1}} />
+          <ResponsePanel content={this.state.response} style={{flex: 1, alignSelf: 'center'}} />
         </div>
       </div>
     )

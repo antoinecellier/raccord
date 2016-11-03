@@ -4,6 +4,7 @@ import GraphQLPanel from './GraphQLPanel'
 import ResponsePanel from './ResponsePanel'
 import translateGraphQlToFalcor from './translate/graphql-to-falcor'
 import falcor from 'falcor/dist/falcor.all'
+import './App.css'
 
 export default class App extends Component {
   constructor(props) {

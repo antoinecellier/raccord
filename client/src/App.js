@@ -38,7 +38,7 @@ export default class App extends Component {
             request={falcor.request}
             onRequestChange={request => falcor.handleRequestChange(request)}
             onResponse={response => falcor.handleResponse(response)} />
-          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => this.handleResponse(response)} />
+          <GraphQLPanel onChange={request => this.tryTranslateGraphQL(request)} onResponse={response => falcor.handleResponse(response)} />
           <ResponsePanel content={this.state.response} />
         </div>
       </div>

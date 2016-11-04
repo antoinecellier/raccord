@@ -8,7 +8,9 @@ export default class FalcorPanel extends Component {
 
   handleFireRequest () {
     if (this.props.onRequestFired) this.props.onRequestFired(this.props.request)
-    this.props.model.get(...this.props.request).then(this.props.onResponse)
+    this.props.model.get(...this.props.request)
+      .then(response => response.json)
+      .then(this.props.onResponse)
   }
 
   render () {

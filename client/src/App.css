@@ -1,0 +1,13 @@
+body {
+  margin: 0;
+}
+
+pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.btn {
+  border-radius: 0;
+}

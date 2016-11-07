@@ -6,7 +6,7 @@ import _ from "lodash"
 // [["stations", "search", "co", {"from":0, "length": 10}, "routes", {"length": 20}, "label"]],
 
 export default function translate(inputFalcor) {
-  const falcorRequest = JSON.parse(inputFalcor);
+  const falcorRequest = inputFalcor
   let graphQlRequest = '{';
   if(falcorRequest[0]) {
     const request = falcorRequest[0];
@@ -15,19 +15,17 @@ export default function translate(inputFalcor) {
 
     const indexOfPagination = _.findIndex(request, (o) => _.isObject(o))
 
-    if(_.isObject(request[3])) {
+    if(_.isObject(request[1])) {
+        graphQlRequest = graphQlRequest.concat('(');
+        _.forIn(request[1], (v, k) => {
+          graphQlRequest = graphQlRequest.concat(`${k}:${v},`);
+        });
+        graphQlRequest = graphQlRequest.concat('){');
+    } else if(_.isObject(request[3])) {
         graphQlRequest = graphQlRequest.concat('(');
         graphQlRequest = graphQlRequest.concat(`${request[1]}:"${request[2]}", `);
         _.forIn(request[indexOfPagination], (v, k) => {
           graphQlRequest = graphQlRequest.concat(`${k}:${v}, `);
-        });
-        graphQlRequest = graphQlRequest.concat('){');
-
-    } else if(_.isObject(request[1])) {
-
-        graphQlRequest = graphQlRequest.concat('(');
-        _.forIn(request[1], (v, k) => {
-          graphQlRequest = graphQlRequest.concat(`${k}:${v},`);
         });
         graphQlRequest = graphQlRequest.concat('){');
     } else if(_.isObject(request[5])) {

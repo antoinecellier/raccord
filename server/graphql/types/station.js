@@ -26,9 +26,14 @@ export const stationType = new GraphQLObjectType({
       type: new GraphQLNonNull(GraphQLString),
       resolve: ({ stop_name }) => stop_name
     },
-    stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },
-    stop_lon: { type: new GraphQLNonNull(GraphQLFloat) },
-    location_type: { type: locationTypeEnum },
+    latitude: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: ({ stop_lat }) => stop_lat
+    },
+    longitude: {
+      type: new GraphQLNonNull(GraphQLFloat),
+      resolve: ({ stop_lon }) => stop_lon
+    },
     routes: {
       type: new GraphQLList(routeType),
       args: {

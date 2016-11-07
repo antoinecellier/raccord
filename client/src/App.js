@@ -19,8 +19,37 @@ export default class App extends Component {
     }
   }
 
-  componentWillUpdate (nextProps, nextState) {
-    console.log(nextState)
+  handleFalcorRequestChanged (request) {
+    this.updateFalcorRequest(request)
+    const {err, translated} = this.tryTranslateFalcorToGraphQl(request)
+    if (err) return console.error(err)
+    else this.updateGraphqlRequest(translated)
+  }
+
+  updateFalcorRequest (request) {
+    this.setState(prevState => ({
+      falcor: Object.assign({}, prevState.falcor, {request})
+    }))
+  }
+
+  tryTranslateFalcorToGraphQl (request) {
+    try {
+      const translated = translateFalcorToGraphQl(request)
+      return {translated}
+    } catch (err) {
+      return {err}
+    }
+  }
+
+  handleGraphQlRequestChanged (request) {
+    this.updateGraphqlRequest(request)
+    const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
+    if (err) return console.error(err)
+    else this.updateFalcorRequest(translated)
+  }
+
+  updateGraphqlRequest (request) {
+    this.setState({graphql: request})
   }
 
   tryTranslateGraphQlToFalcor (request) {
@@ -32,46 +61,12 @@ export default class App extends Component {
     }
   }
 
-  updateFalcorRequest (request) {
-    this.setState(prevState => ({
-      falcor: Object.assign({}, prevState.falcor, {request})
-    }))
-  }
-
-  updateGraphqlRequest (request) {
-    this.setState({graphql: request})
-  }
-
-  handleFalcorRequestChanged (request) {
-    this.updateFalcorRequest(request)
-
-    const {err, translated} = this.tryTranslateFalcor(request)
-    if (err) return console.error(err)
-    else this.updateGraphqlRequest(translated)
-  }
-
-  handleGraphQlRequestChanged (request) {
-    this.updateGraphqlRequest(request)
-    const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
-    if (err) return console.error(err)
-    else this.updateFalcorRequest(translated)
-  }
-
   handleRequestFired (request) {
     this.setState({response: undefined})
   }
 
   handleResponse (response) {
     this.setState({response})
-  }
-
-  tryTranslateFalcor (request) {
-    try {
-      const translated = translateFalcorToGraphQl(request)
-      return {translated}
-    } catch (err) {
-      return {err}
-    }
   }
 
   render () {

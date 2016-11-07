@@ -8,26 +8,22 @@ import translateFalcorToGraphQl from './translate/falcor-to-graphql'
 import './App.css'
 
 export default class App extends Component {
-  constructor(props) {
+  constructor (props) {
     super(props)
     this.state = {
       falcor: {
         model: new falcor.Model({source: new falcor.HttpDataSource('http://localhost:7080/falcor')}),
-        request: [[]],
+        request: [[]]
       },
-      response: 'none',
+      response: 'none'
     }
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  componentWillUpdate (nextProps, nextState) {
     console.log(nextState)
   }
 
-  handleResponse(response) {
-    this.setState({response})
-  }
-
-  tryTranslateGraphQlToFalcor(request) {
+  tryTranslateGraphQlToFalcor (request) {
     try {
       const translated = translateGraphQlToFalcor(request)
       return {translated}
@@ -36,39 +32,39 @@ export default class App extends Component {
     }
   }
 
-  updateFalcorRequest(request) {
+  updateFalcorRequest (request) {
     this.setState(prevState => ({
       falcor: Object.assign({}, prevState.falcor, {request})
     }))
   }
 
-  updateGraphqlRequest(request) {
+  updateGraphqlRequest (request) {
     this.setState({graphql: request})
   }
 
-  handleFalcorRequestChanged(request) {
-    this.updateFalcorRequest(request);
+  handleFalcorRequestChanged (request) {
+    this.updateFalcorRequest(request)
 
-    const {err, translated} = this.tryTranslateFalcor(request);
+    const {err, translated} = this.tryTranslateFalcor(request)
     if (err) return console.error(err)
     else this.updateGraphqlRequest(translated)
   }
 
-  handleGraphQlRequestChanged(request) {
+  handleGraphQlRequestChanged (request) {
     const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
     if (err) return console.error(err)
     else this.updateFalcorRequest(translated)
   }
 
-  handleRequestFired(request) {
+  handleRequestFired (request) {
     this.setState({response: undefined})
   }
 
-  handleResponse(response) {
+  handleResponse (response) {
     this.setState({response})
   }
 
-  tryTranslateFalcor(request) {
+  tryTranslateFalcor (request) {
     try {
       const translated = translateFalcorToGraphQl(request)
       return {translated}

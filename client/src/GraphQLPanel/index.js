@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
-import GraphiQL from 'graphiql';
-import fetch from 'isomorphic-fetch';
-import './graphiql.css';
+import GraphiQL from 'graphiql'
+import fetch from 'isomorphic-fetch'
+import './graphiql.css'
 
 export default class GraphQLPanel extends Component {
-  constructor(props) {
-    super(props);
+  constructor (props) {
+    super(props)
 
     this.state = {
       fetcher: (graphQLParams) => {
@@ -16,46 +16,50 @@ export default class GraphQLPanel extends Component {
         return fetch('http://127.0.0.1:7080/graphql', {
           method: 'post',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(graphQLquery),
+          body: JSON.stringify(graphQLquery)
         }).then(response => response.json())
           .then(rep => {
-            if(!rep.data.__schema){
+            if (!rep.data.__schema) {
               this.state.displayResponse(rep)
             }
-            return rep;
+            return rep
           })
       },
-      onEditQuery: query => {
+      handleQueryChanged: query => {
         console.log(query)
         this.setState({query})
-        this.props.onChange(query);
+        this.props.onChange(query)
       },
       query: props.content,
       queryResult: '',
       displayResponse: response => {
-        this.props.onResponse(response.data);
+        this.props.onResponse(response.data)
       }
-    };
+    }
   }
 
-  componentDidMount() {
-    for(const node of document.querySelectorAll('.cm-s-graphiql textarea')) {
+  handleFireRequest () {
+    this.state.fetcher()
+  }
+
+  componentDidMount () {
+    for (const node of document.querySelectorAll('.cm-s-graphiql textarea')) {
       node.onfocus = () => this.setState({focused: true})
       node.onblur = () => this.setState({focused: false})
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if(!this.state.focused) {
-      this.setState({ query: nextProps.content})
+  componentWillReceiveProps (nextProps) {
+    if (!this.state.focused) {
+      this.setState({query: nextProps.content})
     }
   }
 
   render () {
     return (
       <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-        <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.onEditQuery} query={this.state.query} />
-        <button className="btn btn-primary btn-block" onClick={this.state.fetcher}>Fire GraphQL!</button>
+        <GraphiQL fetcher={this.state.fetcher} onEditQuery={this.state.handleQueryChanged} query={this.state.query} />
+        <button className="btn btn-primary btn-block" onClick={() => this.handleFireRequest()}>Fire GraphQL!</button>
       </div>
     )
   }

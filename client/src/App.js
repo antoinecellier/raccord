@@ -51,6 +51,7 @@ export default class App extends Component {
   }
 
   handleGraphQlRequestChanged (request) {
+    this.updateGraphqlRequest(request)
     const {err, translated} = this.tryTranslateGraphQlToFalcor(request)
     if (err) return console.error(err)
     else this.updateFalcorRequest(translated)

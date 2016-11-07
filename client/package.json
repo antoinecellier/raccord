@@ -38,6 +38,7 @@
   "dependencies": {
     "brace": "^0.8.0",
     "falcor": "^0.1.17",
+    "falcor-path-syntax": "^0.2.4",
     "graphiql": "^0.7.8",
     "graphql": "^0.7.0",
     "hoc-react-loader": "^3.0.0",

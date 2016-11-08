@@ -63,6 +63,10 @@ export default function translate (inputFalcor) {
       if (_.isObject(v) && !_.isArray(v)) {
         graphQlRequest = graphQlRequest.slice(0, -1)
         graphQlRequest = graphQlRequest.concat(`(`)
+        if (v.to) {
+          v.length = v.to + 1
+          delete v.to
+        }
         _.forIn(v, (v, k) => {
           graphQlRequest = graphQlRequest.concat(`${k}:${v},`)
         })

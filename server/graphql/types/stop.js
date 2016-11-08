@@ -62,7 +62,7 @@ export const stopFields = {
 }
 
 export const stopType = new GraphQLObjectType({
-    name: 'Stop',
+    name: 'Stop2',
     fields: () => (stopFields)
 })
 

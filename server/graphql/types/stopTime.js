@@ -4,7 +4,7 @@ import db, {aql} from '../../db'
 import {stationType} from './station'
 import {routeType} from './route'
 
-export const stopType = new GraphQLObjectType({
+export const stopTimeType = new GraphQLObjectType({
   name: 'Stop',
   fields: () => ({
     id: {

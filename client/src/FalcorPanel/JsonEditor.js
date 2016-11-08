@@ -10,7 +10,7 @@ export default class JsonEditor extends Component {
     super(props)
     this.state = {
       textContent: this.asText(props.value),
-      focused: false,
+      focused: false
     }
   }
 

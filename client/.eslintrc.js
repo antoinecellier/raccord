@@ -1,1 +1,3 @@
-module.exports = require('./config/eslint')
+const fromCreateReactApp = require('./config/eslint')
+
+module.exports = Object.assign({}, fromCreateReactApp, {extends: "standard"})

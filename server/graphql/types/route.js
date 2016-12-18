@@ -1,6 +1,14 @@
 import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType } from 'graphql'
 import db, {aql} from '../../db'
 
+export const Route = `
+  type Route {
+    id: String!,
+    label: String!,
+    trip: String!
+  }
+`
+
 export const routeType = new GraphQLObjectType({
     name: 'Route',
     fields: () => ({

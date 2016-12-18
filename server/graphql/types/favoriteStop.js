@@ -2,7 +2,15 @@ import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLList } from 'g
 import db, {aql} from '../../db'
 
 import {stopType, stopDbId} from './stop'
-import {routeType} from './route'
+import { Route, routeType} from './route'
+
+export const FavoriteStop = `
+  type FavoriteStop {
+    id: String!,
+    label: String!,
+    routes: [Route]
+  }
+`
 
 export const favoriteStopType = new GraphQLObjectType({
   name: 'FavoriteStop',

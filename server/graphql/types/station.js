@@ -1,7 +1,23 @@
 import { GraphQLInt, GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType, GraphQLList } from 'graphql'
 import db, {aql} from '../../db'
 
-import {routeType} from './route'
+import { Route, routeType} from './route'
+
+export const Station = `
+  type Station {
+    id: String!,
+    label: String!,
+    latitude: Float!,
+    longitude: Float!,
+    routes: [Route]
+  }
+`
+export const LocationType = `
+  enum LocationType {
+    SeveralStop
+    UniqueStation
+  }
+`
 
 export const locationTypeEnum = new GraphQLEnumType({
   name: 'LocationType',

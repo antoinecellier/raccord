@@ -1,8 +1,29 @@
 import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType, GraphQLList } from 'graphql'
 import db, {aql} from '../../db'
 
-import {routeType} from './route'
-import {stationType, locationTypeEnum} from './station'
+import { Route, routeType} from './route'
+import { Station, stationType, LocationType, locationTypeEnum} from './station'
+
+export const Stop = `
+  type Stop {
+    stop_id: String!,
+    stop_name: String!,
+    stop_lat: Float!,
+    stop_lon: Float!,
+    parent_station: Station,
+    location_type: LocationType,
+    routes: [Route],
+    wheelchair_boarding: WheelchairBoarding
+  }
+`
+
+const WheelchairBoarding = `
+  enum WheelchairBoarding {
+    NoInformation
+    Possible
+    NotPossible
+  }
+`
 
 const wheelchairBoardingEnum = new GraphQLEnumType({
   name: 'WheelchairBoarding',

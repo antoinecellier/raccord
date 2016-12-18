@@ -1,9 +1,18 @@
 import { GraphQLString, GraphQLObjectType, GraphQLNonNull } from 'graphql'
 import db, {aql} from '../../db'
 
-import {stationType} from './station'
-import {routeType} from './route'
+import { Station, stationType} from './station'
+import { Route, routeType} from './route'
 
+export const StopTime = `
+  type StopTime {
+    id: String!,
+    direction: String!,
+    route: Route!,
+    time: String!,
+    station: Station!
+  }
+`
 export const stopTimeType = new GraphQLObjectType({
   name: 'Stop',
   fields: () => ({

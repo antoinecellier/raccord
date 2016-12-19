@@ -1,44 +1,43 @@
-import { GraphQLString, GraphQLObjectType, GraphQLNonNull, GraphQLFloat, GraphQLEnumType, GraphQLList } from 'graphql'
 import db, {aql} from '../../db'
+import Route from './route'
+import Station from './station'
 
-import {routeType} from './route'
-import {stationType, locationTypeEnum} from './station'
-
-const wheelchairBoardingEnum = new GraphQLEnumType({
-  name: 'WheelchairBoarding',
-  values: {
-    NoInformation: {
-      value: 0
-    },
-    Possible: {
-      value: 1
-    },
-    NotPossible: {
-      value: 2
-    }
+const Stop = `
+  type Stop {
+    id: String!,
+    name: String!,
+    latitude: Float!,
+    longitude: Float!,
+    parent_station: Station,
+    routes: [Route]
   }
-});
+`
 
-export const stopFields = {
-  stop_id: { type: new GraphQLNonNull(GraphQLString) },
-  stop_name: { type: new GraphQLNonNull(GraphQLString) },
-  stop_lat: { type: new GraphQLNonNull(GraphQLFloat) },
-  stop_lon: { type: new GraphQLNonNull(GraphQLFloat) },
-  parent_station: {
-    type: stationType,
-    resolve: ({ parent_station }) => {
+export default () => [Stop, Station, Route]
+
+export const resolvers = {
+  Stop: {
+    id ({ stop_id }) {
+      return stop_id
+    },
+    name ({ stop_name }) {
+      return stop_name
+    },
+    latitude ({ stop_lat }) {
+      return stop_lat
+    },
+    longitude ({ stop_lon }) {
+      return stop_lon
+    },
+    parent_station ({ parent_station }) {
       return db().query(aql`
         for stop in stops
         filter stop.stop_id == ${parent_station}
         return stop
       `).then(cursor => cursor.next())
-        .then(station => station );
-    }
-  },
-  location_type: { type: locationTypeEnum },
-  routes: {
-    type: new GraphQLList(routeType),
-    resolve: ({ stop_id }) => {
+        .then(station => station)
+    },
+    routes ({ stop_id }) {
       return db().query(aql`
           let stop_times_of_stop = (
             for stop_time in stop_times
@@ -57,14 +56,8 @@ export const stopFields = {
           return route
         `).then(cursor => cursor.all())
     }
-  },
-  wheelchair_boarding: { type: wheelchairBoardingEnum }
+  }
 }
-
-export const stopType = new GraphQLObjectType({
-    name: 'Stop2',
-    fields: () => (stopFields)
-})
 
 export function stopDbId (stopDtoId) {
   return 'StopPoint:' + stopDtoId

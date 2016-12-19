@@ -1,56 +1,54 @@
-import { GraphQLString, GraphQLObjectType, GraphQLNonNull } from 'graphql'
 import db, {aql} from '../../db'
+import Station from './station'
+import Route from './route'
 
-import {stationType} from './station'
-import {routeType} from './route'
+const StopTime = `
+  type StopTime {
+    id: String!,
+    direction: String!,
+    route: Route!,
+    time: String!,
+    station: Station!
+  }
+`
 
-export const stopTimeType = new GraphQLObjectType({
-  name: 'Stop',
-  fields: () => ({
-    id: {
-      type: new GraphQLNonNull(GraphQLString),
-      resolve: ({ _id }) => _id
-    },
-    direction: {
-      type: new GraphQLNonNull(GraphQLString),
-      resolve: ({ trip_id }) => {
-        return db().query(aql`
-            for trip in trips
-            filter trip.trip_id == ${trip_id}
-            return trip
-            `).then(cursor => cursor.next())
-              .then(trip => trip.trip_headsign)
-      }
-    },
-    route: {
-      type: new GraphQLNonNull(routeType),
-      resolve: ({ trip_id }) => {
-        return db().query(aql`
-              let routeID = (for trip in trips
-                filter trip.trip_id == ${trip_id}
-                return trip.route_id)
+export default () => [StopTime, Route, Station]
 
-              for route in routes
-              filter route.route_id in routeID
-              return route
-            `).then(cursor => cursor.next())
-              .then(route => route)
-      }
+export const resolvers = {
+  StopTime: {
+    id ({ _id }) {
+      return _id
     },
-    time: {
-      type: new GraphQLNonNull(GraphQLString),
-      resolve: ({ departure_time }) => departure_time
+    direction ({ trip_id }) {
+      return db().query(aql`
+          for trip in trips
+          filter trip.trip_id == ${trip_id}
+          return trip
+          `).then(cursor => cursor.next())
+            .then(trip => trip.trip_headsign)
     },
-    station: {
-      type: new GraphQLNonNull(stationType),
-      resolve: ({ stop_id }) => {
-        return db().query(aql`
-              for stop in stops
-              filter stop.stop_id == ${stop_id}
-              return stop
-            `).then(cursor => cursor.next())
-              .then(station => station)
-      }
+    route ({ trip_id }) {
+      return db().query(aql`
+            let routeID = (for trip in trips
+              filter trip.trip_id == ${trip_id}
+              return trip.route_id)
+
+            for route in routes
+            filter route.route_id in routeID
+            return route
+          `).then(cursor => cursor.next())
+            .then(route => route)
+    },
+    time ({ departure_time }) {
+      return departure_time
+    },
+    station ({ stop_id }) {
+      return db().query(aql`
+            for stop in stops
+            filter stop.stop_id == ${stop_id}
+            return stop
+          `).then(cursor => cursor.next())
+            .then(station => station)
     }
-  })
-})
+  }
+}

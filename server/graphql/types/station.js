@@ -15,19 +15,19 @@ export default () => [Station, Route]
 
 export const resolvers = {
   Station: {
-    id({ stop_id }) {
+    id ({ stop_id }) {
       return stop_id.split(':')[1]
     },
-    label({ stop_name }) {
+    label ({ stop_name }) {
       return stop_name
     },
-    latitude({ stop_lat }) {
+    latitude ({ stop_lat }) {
       return stop_lat
     },
-    longitude({ stop_lon }) {
+    longitude ({ stop_lon }) {
       return stop_lon
     },
-    routes({ stop_id }, {from, length}) {
+    routes ({ stop_id }, {from, length}) {
       return db().query(aql`
         let stops = (
           for stop in stops

@@ -15,7 +15,7 @@ export default () => [Query, Station, Stop]
 
 export const resolvers = {
   Query: {
-    stations(_, { search = "", from, length }) {
+    stations (_, { search = '', from, length }) {
       return db().query(aql`
           for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
           filter stop.location_type == 1
@@ -24,14 +24,14 @@ export const resolvers = {
           return stop
         `).then(cursor => cursor.all())
     },
-    favoriteStations(_, { user, from, length }) {
+    favoriteStations (_, { user, from, length }) {
       return db().query(aql`
           for favorite_stop in favorite_stops
           limit ${from}, ${length}
           return favorite_stop
         `).then(cursor => cursor.all())
     },
-    stops(_, {stationId, after, from, length}) {
+    stops (_, {stationId, after, from, length}) {
       const afterMoment = moment(after)
       const afterWeekday = afterMoment.format('dddd').toLowerCase()
       const afterDay = parseInt(afterMoment.format('YYYYMMDD'))
@@ -57,9 +57,7 @@ export const resolvers = {
         sort stop_time.departure_time
         limit ${from}, ${length}
         return stop_time
-      `).then(cursor => {
-        return cursor.all()
-      })
+      `).then(cursor => cursor.all())
     }
   }
 }

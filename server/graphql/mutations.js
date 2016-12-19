@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql'
 import db, {aql} from '../db'
 import { stopDbId } from './types/stop'
 import FavoriteStop from './types/favoriteStop'
@@ -13,7 +14,7 @@ export default () => [Mutation, FavoriteStop]
 
 export const resolvers = {
   Mutation: {
-    addFavorite(_, { stop_id, user_id }) {
+    addFavorite (_, { stop_id, user_id }) {
       return db().query(aql`
           for favorite_stop in favorite_stops
           filter favorite_stop.stop_id == ${stopDbId(stop_id)} && favorite_stop.user_id == ${user_id}
@@ -30,7 +31,7 @@ export const resolvers = {
                 .then(stop => stop)
         })
     },
-    removeFavorite(_, { stop_id, user_id }) {
+    removeFavorite (_, { stop_id, user_id }) {
       return db().query(aql`
           for favorite_stop in favorite_stops
           filter favorite_stop.stop_id == ${stopDbId(stop_id)} && favorite_stop.user_id == ${user_id}

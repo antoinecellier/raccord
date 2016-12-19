@@ -17,19 +17,19 @@ export default () => [Stop, Station, Route]
 
 export const resolvers = {
   Stop: {
-    id({ stop_id }) {
+    id ({ stop_id }) {
       return stop_id
     },
-    name({ stop_name }) {
+    name ({ stop_name }) {
       return stop_name
     },
-    latitude({ stop_lat }) {
+    latitude ({ stop_lat }) {
       return stop_lat
     },
-    longitude({ stop_lon }) {
+    longitude ({ stop_lon }) {
       return stop_lon
     },
-    parent_station({ parent_station }) {
+    parent_station ({ parent_station }) {
       return db().query(aql`
         for stop in stops
         filter stop.stop_id == ${parent_station}
@@ -37,7 +37,7 @@ export const resolvers = {
       `).then(cursor => cursor.next())
         .then(station => station)
     },
-    routes({ stop_id }) {
+    routes ({ stop_id }) {
       return db().query(aql`
           let stop_times_of_stop = (
             for stop_time in stop_times

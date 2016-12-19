@@ -1,5 +1,5 @@
 import db, {aql} from '../../db'
-import Route, { routeType } from './route'
+import Route from './route'
 
 export const Trip = `
   type Trip {
@@ -14,17 +14,16 @@ export const Trip = `
 export default () => [Trip, Route]
 
 export const resolvers = {
-    Trip: {
-      label({ trip_headsign }) {
-        return trip_headsign
-      },
-      route({ route_id }) {
-        return db().query(aql`
-            for route in routes
-            filter route.route_id == ${route_id}
-            return route
-          `).then(cursor => cursor.next() )
-            .then(route => route )
-      }
+  Trip: {
+    label ({ trip_headsign }) {
+      return trip_headsign
+    },
+    route ({ route_id }) {
+      return db().query(aql`
+          for route in routes
+          filter route.route_id == ${route_id}
+          return route
+        `).then(cursor => cursor.next())
     }
+  }
 }

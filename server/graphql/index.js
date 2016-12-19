@@ -1,4 +1,3 @@
-import { GraphQLSchema } from 'graphql'
 import graphqlHTTP from 'express-graphql'
 import { makeExecutableSchema } from 'graphql-tools'
 import { merge } from 'lodash'
@@ -25,4 +24,4 @@ const resolvers = merge(queryResolvers, mutationResolvers, routeResolvers, stati
 const schema = makeExecutableSchema({ typeDefs, resolvers })
 
 export default express.Router()
-  .use('/', graphqlHTTP({schema , pretty: true, graphiql: true}));
+  .use('/', graphqlHTTP({ schema, pretty: true, graphiql: true }))

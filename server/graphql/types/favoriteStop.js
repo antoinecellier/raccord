@@ -13,18 +13,18 @@ export default () => [FavoriteStop, Route]
 
 export const resolvers = {
   FavoriteStop: {
-    id({ stop_id }) {
+    id ({ stop_id }) {
       return stop_id
     },
-    label({ stop_id }) {
+    label ({ stop_id }) {
       return db().query(aql`
         for stop in stops
         filter stop.stop_id == ${stop_id}
         return stop.stop_name
         `).then(cursor => cursor.next())
-          .then(stop_name => stop_name);
+          .then(stop_name => stop_name)
     },
-    routes({ stop_id }) {
+    routes ({ stop_id }) {
       return db().query(aql`
           let stops = (
             for stop in stops

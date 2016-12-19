@@ -1,3 +1,4 @@
+import DataLoader from 'dataloader'
 import db, {aql} from '../../db'
 import Route from './route'
 
@@ -28,10 +29,18 @@ export const resolvers = {
       return stop_lon
     },
     routes ({ stop_id }, {from, length}) {
-      return db().query(aql`
+      return RoutesByStationIdLoader.load(stop_id)
+    }
+  }
+}
+
+const getRoutesByStationIds = (stopIds) => {
+  return new Promise((resolve, reject) => {
+    db().query(aql`
+      for stopId in ${stopIds}
         let stops = (
           for stop in stops
-          filter stop.parent_station == ${stop_id}
+          filter stop.parent_station == stopId
           return stop.stop_id
         )
 
@@ -47,14 +56,20 @@ export const resolvers = {
           return trip.route_id
         )
 
-        for route in routes
-        filter route.route_id in routes_of_stops
-        limit ${from}, ${length}
-        return route
-      `).then(cursor => cursor.all())
-    }
-  }
+        let routes = (
+          for route in routes
+          filter route.route_id in routes_of_stops
+          limit 0, 3
+          return route
+        )
+
+      return routes
+    `).then(cursor => cursor.all())
+      .then(routes => resolve(routes))
+  });
 }
+
+const RoutesByStationIdLoader = new DataLoader(getRoutesByStationIds);
 
 export function stationDbId (stationDtoId) {
   return 'StopArea:' + stationDtoId

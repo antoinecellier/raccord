@@ -29,8 +29,8 @@ export const resolvers = {
     longitude ({ stop_lon }) {
       return stop_lon
     },
-    routes ({ stop_id }, {from, length}) {
-      return RoutesByStationIdLoader.load({stop_id, from, length})
+    routes ({ stop_id }, { from, length }) {
+      return RoutesByStationIdLoader.load({ stop_id, from, length })
     }
   }
 }
@@ -38,7 +38,7 @@ export const resolvers = {
 const getRoutesByStationIds = (stopIds) => {
   const { from, length } = stopIds[0]
   stopIds = map(stopIds, 'stop_id')
-  
+
   return new Promise((resolve, reject) => {
     db().query(aql`
       for stopId in ${stopIds}

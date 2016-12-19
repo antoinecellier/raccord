@@ -1,4 +1,5 @@
 import DataLoader from 'dataloader'
+import { map } from 'lodash'
 import db, {aql} from '../../db'
 import Route from './route'
 
@@ -29,15 +30,20 @@ export const resolvers = {
       return stop_lon
     },
     routes ({ stop_id }, {from, length}) {
-      return RoutesByStationIdLoader.load(stop_id)
+      return RoutesByStationIdLoader.load({stop_id, from, length})
     }
   }
 }
 
 const getRoutesByStationIds = (stopIds) => {
+  const { from, length } = stopIds[0]
+  stopIds = map(stopIds, 'stop_id')
+  
   return new Promise((resolve, reject) => {
     db().query(aql`
       for stopId in ${stopIds}
+        let from = stopId.from
+
         let stops = (
           for stop in stops
           filter stop.parent_station == stopId
@@ -59,7 +65,7 @@ const getRoutesByStationIds = (stopIds) => {
         let routes = (
           for route in routes
           filter route.route_id in routes_of_stops
-          limit 0, 3
+          limit ${from}, ${length}
           return route
         )
 

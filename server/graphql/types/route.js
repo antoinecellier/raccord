@@ -8,6 +8,8 @@ const Route = `
   }
 `
 
+export default () => [Route]
+
 export const resolvers = {
   Route: {
     id({ route_id }) {
@@ -21,23 +23,3 @@ export const resolvers = {
     }
   }
 }
-
-export default () => [Route]
-//
-// export const routeType = new GraphQLObjectType({
-//     name: 'Route',
-//     fields: () => ({
-//       id: {
-//         type: new GraphQLNonNull(GraphQLString),
-//         resolve: ({ route_id }) => route_id.split('-')[0]
-//       },
-//       label: {
-//         type: new GraphQLNonNull(GraphQLString),
-//         resolve: ({ route_short_name }) => route_short_name
-//       },
-//       trip: {
-//         type: new GraphQLNonNull(GraphQLString),
-//         resolve: ({ route_long_name }) => route_long_name
-//       }
-//     })
-// })

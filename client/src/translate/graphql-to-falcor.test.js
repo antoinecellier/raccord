@@ -1,9 +1,8 @@
 import test from 'tape'
-import assert from 'assert'
 import {translateNode} from './graphql-to-falcor'
 
 test('simple document', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Document',
       definitions: [
@@ -21,14 +20,14 @@ test('simple document', t => {
 })
 
 test('simple field', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({kind: 'Field', name: {value: 'field'}}),
     [['field']])
   t.end()
 })
 
 test('simple field with one argument', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -41,7 +40,7 @@ test('simple field with one argument', t => {
 })
 
 test('simple field with several argument', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -56,7 +55,7 @@ test('simple field with several argument', t => {
 })
 
 test('simple field with one range argument', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -70,7 +69,7 @@ test('simple field with one range argument', t => {
 })
 
 test('simple field with one range argument and one normal argument', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -85,7 +84,7 @@ test('simple field with one range argument and one normal argument', t => {
 })
 
 test('fields with two selections', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -103,7 +102,7 @@ test('fields with two selections', t => {
 })
 
 test('fields with nested selection', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({kind: 'Field',
       name: {value: 'field'},
       selectionSet: {
@@ -128,7 +127,7 @@ test('fields with nested selection', t => {
 })
 
 test('fields with a nested selection and a simple selection before', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},
@@ -155,7 +154,7 @@ test('fields with a nested selection and a simple selection before', t => {
 })
 
 test('fields with a nested selection and a simple selection after', t => {
-  assert.deepEqual(
+  t.deepEqual(
     translateNode({
       kind: 'Field',
       name: {value: 'field'},

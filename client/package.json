@@ -4,10 +4,11 @@
   "private": true,
   "devDependencies": {
     "autoprefixer": "6.3.7",
+    "babel-cli": "^6.18.0",
     "babel-core": "6.10.4",
     "babel-eslint": "6.1.2",
     "babel-loader": "6.2.4",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.10.3",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
     "babel-plugin-transform-react-constant-elements": "6.9.1",
     "babel-preset-react": "6.11.1",
     "chalk": "1.1.3",
@@ -30,7 +31,7 @@
     "postcss-loader": "0.9.1",
     "rimraf": "2.5.3",
     "style-loader": "0.13.1",
-    "tape": "^4.6.2",
+    "tape": "^4.6.3",
     "url-loader": "0.5.7",
     "webpack": "1.13.1",
     "webpack-dev-server": "1.14.1"
@@ -51,6 +52,6 @@
   "scripts": {
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
-    "test": "node src/translate/graphql-to-falcor.test.js | faucet"
+    "test": "babel-node --plugins transform-es2015-modules-commonjs src/translate/graphql-to-falcor.test.js | faucet"
   }
 }

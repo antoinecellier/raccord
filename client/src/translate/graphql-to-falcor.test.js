@@ -1,7 +1,6 @@
 const test = require('tape')
 const assert = require('assert')
-
-// translateNode is from graphql-to-falcor.js
+const {translateNode} = require('./graphql-to-falcor')
 
 test('simple document', t => {
   assert.deepEqual(

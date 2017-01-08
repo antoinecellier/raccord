@@ -52,6 +52,6 @@
   "scripts": {
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
-    "test": "babel-node --plugins transform-es2015-modules-commonjs src/translate/graphql-to-falcor.test.js | faucet"
+    "test": "babel-node --plugins transform-es2015-modules-commonjs src/translate/translate.test.js | faucet"
   }
 }

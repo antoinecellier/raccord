@@ -83,7 +83,46 @@ test('one path with 1 simple segments and 1 nested segment at the end', {objectP
 
 test('args processing', t => {
   t.deepEqual(
-    chunkByArgs(['a', 'b', 'c', 'd', ['e', 'f']], {types: [{fields: [{name: 'a', args: [{name: 'b', type: {name: 'String'}}]}]}]}),
-    [{kind: 'FieldWithArgs', field: 'a', args: {b: {name: 'c', type: 'String'}}}, {kind: 'Field', field: 'd'}, {kind: 'MultipleFields', fields: ['e', 'f']}])
+    // Actual
+    chunkByArgs(
+      // Falcor path
+      ['a', 'b', 'c', 'd', ['e', 'f']],
+      // GraphQL schema
+      {
+        types: [
+          {
+            fields: [
+              {
+                name: 'a',
+                args: [
+                  {
+                    name: 'b',
+                    type: {name: 'String'}
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ),
+    // Expected chunked path
+    [
+      {
+        kind: 'FieldWithArgs',
+        field: 'a',
+        args: {
+          b: {name: 'c', type: 'String'}
+        }
+      },
+      {
+        kind: 'Field',
+        field: 'd'
+      },
+      {
+        kind: 'MultipleFields',
+        fields: ['e', 'f']
+      }
+    ])
   t.end()
 })

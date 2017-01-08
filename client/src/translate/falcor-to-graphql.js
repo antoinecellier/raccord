@@ -16,7 +16,6 @@ export default function translate (inputFalcor) {
 export function translatePath (path, schema) {
   console.log('Falcor->GraphQL: translating path:', path, schema)
   if (schema) path = chunkByArgs(path, schema)
-  console.log('chunked', path)
   const [rootNode] = path.reduce(([rootNode, currentNode = rootNode], pathSegment) => {
     if (pathSegment.kind === 'FieldWithArgs') {
       const node = {

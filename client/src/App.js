@@ -21,9 +21,12 @@ export default class App extends Component {
 
   handleFalcorRequestChanged (request) {
     this.updateFalcorRequest(request)
-    const {err, translated} = this.tryTranslateFalcorToGraphQl(request)
-    if (err) return console.error(err)
-    else this.updateGraphqlRequest(translated)
+    this.tryTranslateFalcorToGraphQl(request)
+      .then(translated => this.updateGraphqlRequest(translated))
+      .catch(err => console.error(err))
+    // const {err, translated} = this.tryTranslateFalcorToGraphQl(request)
+    // if (err) return console.error(err)
+    // else this.updateGraphqlRequest(translated)
   }
 
   updateFalcorRequest (request) {
@@ -33,12 +36,13 @@ export default class App extends Component {
   }
 
   tryTranslateFalcorToGraphQl (request) {
-    try {
+    return translateFalcorToGraphQl(request)
+    /* try {
       const translated = translateFalcorToGraphQl(request)
       return {translated}
     } catch (err) {
       return {err}
-    }
+    } */
   }
 
   handleGraphQlRequestChanged (request) {
@@ -49,6 +53,7 @@ export default class App extends Component {
   }
 
   updateGraphqlRequest (request) {
+    console.log('updateGraphqlRequest', request)
     this.setState({graphql: request})
   }
 

@@ -1,5 +1,5 @@
 import test from 'tape'
-import {translatePath} from './falcor-to-graphql'
+import {translatePath, chunkByArgs} from './falcor-to-graphql'
 
 test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
@@ -50,7 +50,7 @@ test('one path with 2 simple segments', {objectPrintDepth: 20}, t => {
   t.end()
 })
 
-test('one path with 2 simple segments and 1 nested segment at the end', {objectPrintDepth: 20}, t => {
+test('one path with 1 simple segments and 1 nested segment at the end', {objectPrintDepth: 20}, t => {
   t.deepEqual(
     translatePath(['field1', ['child1', 'child2']]),
     {
@@ -78,5 +78,12 @@ test('one path with 2 simple segments and 1 nested segment at the end', {objectP
         }
       ]
     })
+  t.end()
+})
+
+test('args processing', t => {
+  t.deepEqual(
+    chunkByArgs(['a', 'b', 'c', 'd', ['e', 'f']], {types: [{fields: [{name: 'a', args: [{name: 'b', type: {name: 'String'}}]}]}]}),
+    [{kind: 'FieldWithArgs', field: 'a', args: {b: {name: 'c', type: 'String'}}}, {kind: 'Field', field: 'd'}, {kind: 'MultipleFields', fields: ['e', 'f']}])
   t.end()
 })

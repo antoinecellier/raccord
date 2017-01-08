@@ -1,6 +1,6 @@
-const test = require('tape')
-const assert = require('assert')
-const {translateNode} = require('./graphql-to-falcor')
+import test from 'tape'
+import assert from 'assert'
+import {translateNode} from './graphql-to-falcor'
 
 test('simple document', t => {
   assert.deepEqual(

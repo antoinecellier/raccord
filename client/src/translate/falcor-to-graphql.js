@@ -85,15 +85,6 @@ export function chunkByArgs (path, schema) {
       return newPath.concat({kind: 'Field', field: segment})
     }
   }, [])
-/*
-  const currentSchemaNode = schema
-  const segments = [[]]
-  for (const pathSegment of path) {
-    if (nodesWithArgs.includes(pathSegment)) {
-      segments.push([pathSegment])
-    }
-    const currentSegment = _.last(segments)
-  } */
 }
 
 function getSchema () {

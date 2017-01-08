@@ -21,28 +21,15 @@ export default class App extends Component {
 
   handleFalcorRequestChanged (request) {
     this.updateFalcorRequest(request)
-    this.tryTranslateFalcorToGraphQl(request)
+    translateFalcorToGraphQl(request)
       .then(translated => this.updateGraphqlRequest(translated))
       .catch(err => console.error(err))
-    // const {err, translated} = this.tryTranslateFalcorToGraphQl(request)
-    // if (err) return console.error(err)
-    // else this.updateGraphqlRequest(translated)
   }
 
   updateFalcorRequest (request) {
     this.setState(prevState => ({
       falcor: Object.assign({}, prevState.falcor, {request})
     }))
-  }
-
-  tryTranslateFalcorToGraphQl (request) {
-    return translateFalcorToGraphQl(request)
-    /* try {
-      const translated = translateFalcorToGraphQl(request)
-      return {translated}
-    } catch (err) {
-      return {err}
-    } */
   }
 
   handleGraphQlRequestChanged (request) {

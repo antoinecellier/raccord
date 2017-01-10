@@ -8,48 +8,24 @@ export default function translate (inputFalcor) {
   return getSchema().then(schema => {
     const graphQlQueryAsts = inputFalcor
       .map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
-      .map(path => translatePath(path, schema))
+      .map(path => translatePath(path, typesOfArgsByField(schema)))
     return print(graphQlQueryAsts[0]) // TODO: support multiple paths by merging the ASTs
   })
 }
 
 export function translatePath (path, schema) {
   console.log('Falcor->GraphQL: translating path:', path, schema)
-  if (schema) path = chunkByArgs(path, schema)
-  const [rootNode] = path.reduce(([rootNode, currentNode = rootNode], pathSegment) => {
-    if (pathSegment.kind === 'FieldWithArgs') {
-      const node = {
-        kind: 'Field',
-        name: {kind: 'Name', value: pathSegment.field},
-        arguments: _.map(pathSegment.args, (arg, name) => ({
-          kind: 'Argument',
-          name: {kind: 'Name', value: name},
-          value: {kind: `${arg.type}Value`, value: arg.value}
-        }))
-      }
-      currentNode.selectionSet = {
-        kind: 'SelectionSet',
-        selections: [node]
-      }
-      return [rootNode, node]
-    } else if (pathSegment.kind) {
-      pathSegment = pathSegment.field || pathSegment.fields
-    }
-    const normalizedPathSegment = Array.isArray(pathSegment) ? pathSegment : [pathSegment]
-    const nodes = normalizedPathSegment.map(nestedSegment => ({kind: 'Field', name: {kind: 'Name', value: nestedSegment}}))
-    currentNode.selectionSet = {
-      kind: 'SelectionSet',
-      selections: nodes
-    }
-    return [rootNode, nodes[0]]
-  }, [{}])
+  const argAwarePath = groupArgs(path, schema)
   const rootGraphQlQuery = {
     kind: 'Document',
     definitions: [
       {
         kind: 'OperationDefinition',
         operation: 'query',
-        selectionSet: rootNode.selectionSet
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: translateArgAwarePath(argAwarePath)
+        }
       }
     ]
   }
@@ -57,33 +33,54 @@ export function translatePath (path, schema) {
   return rootGraphQlQuery
 }
 
-export function chunkByArgs (path, schema) {
-  const nodesWithArgs = _(schema.types).flatMap('fields').compact().transform((nodes, node) => {
+function translateArgAwarePath (path) {
+  if (path.length === 0) return []
+  const [{field, args}, ...rest] = path
+  const fields = Array.isArray(field) ? field : [field]
+  const nodes = fields.map(field => {
+    const gqlNode = {
+      kind: 'Field',
+      name: {
+        kind: 'Name',
+        value: field
+      },
+      arguments: _.map(args, ({value, type}, name) => ({
+        kind: 'Argument',
+        name: {kind: 'Name', value: name},
+        value: {kind: `${type}Value`, value}
+      })),
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: translateArgAwarePath(rest)
+      }
+    }
+    if (_.isEmpty(gqlNode.arguments)) delete gqlNode.arguments
+    if (_.isEmpty(gqlNode.selectionSet.selections)) delete gqlNode.selectionSet
+    return gqlNode
+  })
+  return nodes
+}
+
+export function typesOfArgsByField (schema = {}) {
+  // TODO: handle fields with same name (i.e. namespace by types)
+  return _(schema.types).flatMap('fields').compact().transform((nodes, node) => {
     nodes[node.name] = _.transform(node.args, (args, arg) => {
       args[arg.name] = arg.type.name || arg.type.ofType.name
     }, {})
   }, {}).value()
-  let argsOfCurrentNode = null
-  let waitingForArgValue = null
-  return path.reduce((newPath, segment) => {
-    if (waitingForArgValue) {
-      _.last(newPath).args[waitingForArgValue] = {value: segment, type: argsOfCurrentNode[waitingForArgValue]}
-      waitingForArgValue = null
-      return newPath
-    } else if (Array.isArray(segment)) {
-      argsOfCurrentNode = null
-      return newPath.concat({kind: 'MultipleFields', fields: segment})
-    } else if (segment in nodesWithArgs) {
-      argsOfCurrentNode = nodesWithArgs[segment]
-      return newPath.concat({kind: 'FieldWithArgs', field: segment, args: {}})
-    } else if (argsOfCurrentNode && segment in argsOfCurrentNode) {
-      waitingForArgValue = segment
-      return newPath
-    } else {
-      argsOfCurrentNode = null
-      return newPath.concat({kind: 'Field', field: segment})
-    }
-  }, [])
+}
+
+export function groupArgs (path, schema = {}) {
+  if (path.length === 0) return []
+  const [field, ...maybeArgs] = path
+  const args = _(maybeArgs)
+    .chunk(2)
+    .takeWhile(([name]) => name in (schema[field] || {}))
+    .fromPairs()
+    .mapValues((value, name) => ({value: value || '', type: schema[field][name]}))
+    .value()
+  const restOfPath = _.drop(maybeArgs, Object.keys(args).length * 2)
+  return [{field, args}, ...groupArgs(restOfPath, schema)]
 }
 
 function getSchema () {

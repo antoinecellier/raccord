@@ -5,11 +5,15 @@ import falcorPathSyntax from 'falcor-path-syntax'
 import fetch from 'isomorphic-fetch'
 
 export default function translate (inputFalcor) {
+  // TODO: start by optimizing the Falcor path to reduce the number of paths (there's a falcor util for that)
   return getSchema().then(schema => {
     const graphQlQueryAsts = inputFalcor
       .map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
       .map(path => translatePath(path, typesOfArgsByField(schema)))
-    return print(graphQlQueryAsts[0]) // TODO: support multiple paths by merging the ASTs
+    const mergedGraphQlQueryAsts = _.mergeWith(...graphQlQueryAsts, (left, right, key) => {
+      if (Array.isArray(left) && key !== 'definitions') return left.concat(right)
+    })
+    return print(mergedGraphQlQueryAsts)
   })
 }
 

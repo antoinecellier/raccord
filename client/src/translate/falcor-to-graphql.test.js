@@ -112,7 +112,7 @@ test('args processing', t => {
         kind: 'FieldWithArgs',
         field: 'a',
         args: {
-          b: {name: 'c', type: 'String'}
+          b: {value: 'c', type: 'String'}
         }
       },
       {

@@ -8,9 +8,8 @@ import fetch from 'isomorphic-fetch'
 export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
   const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
-  return getSchema().then(schema => {
-    const graphQlQueryAsts = collapsedInputFalcor
-      .map(path => translatePath(path, typesOfArgsByField(schema)))
+  return getSchema().then(typesOfArgsByField).then(schema => {
+    const graphQlQueryAsts = collapsedInputFalcor.map(path => translatePath(path, schema))
     const mergedGraphQlQueryAsts = _.mergeWith(...graphQlQueryAsts, (left, right, key) => {
       // TODO: avoid the 'definitions' special case by concatenating definitions before forming a document.
       // TODO: merge nodes based on functional identity (e.g. two selections are equal if same name and same args).

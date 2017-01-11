@@ -7,7 +7,7 @@ import {print} from 'graphql/language/printer'
 export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
   const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
-  return getSchema().then(typesOfArgsByField).then(schema => {
+  return getSchema().then(schemaKeyedByNames).then(schema => {
     console.log('Falcor->GraphQL: translating path:', collapsedInputFalcor, schema)
     const outputGraphQlAst = wrapInQuery(collapseSelections(collapsedInputFalcor
       .map(path => translatePath(path, schema))
@@ -49,7 +49,7 @@ export function collapseSelections (selections) {
  * Translate a falcor path to a GraphQL selections array.
  */
 export function translatePath (path, schema) {
-  return translateArgAwarePath(groupArgs(path, schema))
+  return translateArgAwarePath(groupArgs(path, 'Query', schema))
 }
 
 /**
@@ -85,13 +85,19 @@ function translateArgAwarePath (path) {
 /**
  * Returns a simplified schema to pass to groupArgs.
  */
-export function typesOfArgsByField (schema = {}) {
-  // TODO: handle fields with same name (i.e. namespace by types)
-  return _(schema.types).flatMap('fields').compact().transform((nodes, node) => {
-    nodes[node.name] = _.transform(node.args, (args, arg) => {
-      args[arg.name] = arg.type.name || arg.type.ofType.name
-    }, {})
-  }, {}).value()
+export function schemaKeyedByNames (schema = {}) {
+  return _(schema.types)
+    .keyBy('name')
+    .mapValues(type => {
+      const keyedFields = _(type.fields)
+        .keyBy('name')
+        .mapValues(field => Object.assign({}, field, {
+          args: _.keyBy(field.args, 'name')
+        }))
+        .value()
+      return Object.assign({}, type, {fields: keyedFields})
+    })
+    .value()
 }
 
 /**
@@ -99,19 +105,22 @@ export function typesOfArgsByField (schema = {}) {
  * arguments.
  *
  * @argument path falcor path
- * @argument schema output from typesOfArgsByField
+ * @argument schema output from schemaKeyedByNames
  */
-export function groupArgs (path, schema = {}) {
+export function groupArgs (path, type, schema) {
   if (path.length === 0) return []
   const [field, ...maybeArgs] = path
+  const fieldSchema = _.get(schema, [type, 'fields', field], {args: {}, type: {name: type}})
+  console.log(fieldSchema)
   const args = _(maybeArgs)
     .chunk(2)
-    .takeWhile(([name]) => name in (schema[field] || {}))
+    .takeWhile(([name]) => name in (fieldSchema.args || {}))
     .fromPairs()
-    .mapValues((value, name) => ({value: value || '', type: schema[field][name]}))
+    .mapValues((value, name) => ({value: value || '', type: fieldSchema.args[name].type.name}))
     .value()
   const restOfPath = _.drop(maybeArgs, Object.keys(args).length * 2)
-  return [{field, args}, ...groupArgs(restOfPath, schema)]
+  const typeOfRestOfPath = fieldSchema.type.name
+  return [{field, args}, ...groupArgs(restOfPath, typeOfRestOfPath, schema)]
 }
 
 function getSchema () {
@@ -125,6 +134,14 @@ function getSchema () {
           name
           fields {
             name
+            type {
+              name
+              kind
+              ofType {
+                name
+                kind
+              }
+            }
             args {
               name
               type {

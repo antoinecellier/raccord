@@ -1,5 +1,5 @@
 import test from 'tape'
-import {translatePath, groupArgs, typesOfArgsByField, collapseSelections} from './falcor-to-graphql'
+import {translatePath, groupArgs, schemaKeyedByNames, collapseSelections} from './falcor-to-graphql'
 
 test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
@@ -82,9 +82,10 @@ test('one path with 1 simple segments and 1 nested segment at the end', {objectP
 
 test('schema processing', t => {
   t.deepEqual(
-    typesOfArgsByField({
+    schemaKeyedByNames({
       types: [
         {
+          name: 't',
           fields: [
             {
               name: 'a',
@@ -100,8 +101,19 @@ test('schema processing', t => {
       ]
     }),
     {
-      a: {
-        b: 'String'
+      t: {
+        name: 't',
+        fields: {
+          a: {
+            name: 'a',
+            args: {
+              b: {
+                name: 'b',
+                type: {name: 'String'}
+              }
+            }
+          }
+        }
       }
     }
   )
@@ -114,10 +126,33 @@ test('args processing', t => {
     groupArgs(
       // Falcor path
       ['a', 'b', 'c', 'd', ['e', 'f']],
+      // Root type
+      'TypeA',
       // GraphQL fields
       {
-        a: {
-          b: 'String'
+        TypeA: {
+          fields: {
+            a: {
+              type: {
+                name: 'TypeB'
+              },
+              args: {
+                b: {
+                  type: {name: 'String'}
+                }
+              }
+            }
+          }
+        },
+        TypeB: {
+          fields: {
+            a: {type: {name: 'TypeA'}},
+            b: {type: {name: 'TypeA'}},
+            c: {type: {name: 'TypeB'}},
+            d: {type: {name: 'TypeB'}},
+            e: {type: {name: 'TypeB'}},
+            f: {type: {name: 'TypeB'}}
+          }
         }
       }
     ),

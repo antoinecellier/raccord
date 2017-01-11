@@ -2,13 +2,14 @@ import {parse} from 'graphql/language/parser'
 import { print } from 'graphql/language/printer'
 import _ from 'lodash'
 import falcorPathSyntax from 'falcor-path-syntax'
+import falcorPathUtils from 'falcor-path-utils'
 import fetch from 'isomorphic-fetch'
 
 export default function translate (inputFalcor) {
-  // TODO: start by optimizing the Falcor path to reduce the number of paths (there's a falcor util for that)
+  const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
+  const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
   return getSchema().then(schema => {
-    const graphQlQueryAsts = inputFalcor
-      .map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
+    const graphQlQueryAsts = collapsedInputFalcor
       .map(path => translatePath(path, typesOfArgsByField(schema)))
     const mergedGraphQlQueryAsts = _.mergeWith(...graphQlQueryAsts, (left, right, key) => {
       // TODO: avoid the 'definitions' special case by concatenating definitions before forming a document.

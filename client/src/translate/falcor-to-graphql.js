@@ -11,13 +11,19 @@ export default function translate (inputFalcor) {
       .map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
       .map(path => translatePath(path, typesOfArgsByField(schema)))
     const mergedGraphQlQueryAsts = _.mergeWith(...graphQlQueryAsts, (left, right, key) => {
+      // TODO: avoid the 'definitions' special case by concatenating definitions before forming a document.
+      // TODO: merge nodes based on functional identity (e.g. two selections are equal if same name and same args).
       if (Array.isArray(left) && key !== 'definitions') return left.concat(right)
     })
     return print(mergedGraphQlQueryAsts)
   })
 }
 
+/**
+ * Translate a falcor path to GraphQL document.
+ */
 export function translatePath (path, schema) {
+  // TODO: move those logs one level up the stack
   console.log('Falcor->GraphQL: translating path:', path, schema)
   const argAwarePath = groupArgs(path, schema)
   const rootGraphQlQuery = {
@@ -37,11 +43,14 @@ export function translatePath (path, schema) {
   return rootGraphQlQuery
 }
 
+/**
+ * Translates a path returned by groupArgs to a GraphQL selections array.
+ */
 function translateArgAwarePath (path) {
   if (path.length === 0) return []
   const [{field, args}, ...rest] = path
   const fields = Array.isArray(field) ? field : [field]
-  const nodes = fields.map(field => {
+  return fields.map(field => {
     const gqlNode = {
       kind: 'Field',
       name: {
@@ -62,9 +71,11 @@ function translateArgAwarePath (path) {
     if (_.isEmpty(gqlNode.selectionSet.selections)) delete gqlNode.selectionSet
     return gqlNode
   })
-  return nodes
 }
 
+/**
+ * Returns a simplified schema to pass to groupArgs.
+ */
 export function typesOfArgsByField (schema = {}) {
   // TODO: handle fields with same name (i.e. namespace by types)
   return _(schema.types).flatMap('fields').compact().transform((nodes, node) => {
@@ -74,6 +85,13 @@ export function typesOfArgsByField (schema = {}) {
   }, {}).value()
 }
 
+/**
+ * Groups fields with their arguments. Uses the GraphQL schema to detect
+ * arguments.
+ *
+ * @argument path falcor path
+ * @argument schema output from typesOfArgsByField
+ */
 export function groupArgs (path, schema = {}) {
   if (path.length === 0) return []
   const [field, ...maybeArgs] = path

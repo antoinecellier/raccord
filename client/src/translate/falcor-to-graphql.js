@@ -1,9 +1,8 @@
-import {parse} from 'graphql/language/parser'
-import { print } from 'graphql/language/printer'
 import _ from 'lodash'
 import falcorPathSyntax from 'falcor-path-syntax'
 import falcorPathUtils from 'falcor-path-utils'
 import fetch from 'isomorphic-fetch'
+import {print} from 'graphql/language/printer'
 
 export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)

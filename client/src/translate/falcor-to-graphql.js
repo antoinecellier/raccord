@@ -109,18 +109,26 @@ export function schemaKeyedByNames (schema = {}) {
  */
 export function groupArgs (path, type, schema) {
   if (path.length === 0) return []
+  let rangeWasExpanded = false // CAREFUL: mutated by inner function rangeToArgs
   const [field, ...maybeArgs] = path
   const fieldSchema = _.get(schema, [type, 'fields', field], {args: {}, type: {name: type}})
-  console.log(fieldSchema)
   const args = _(maybeArgs)
+    .flatMap(maybeArg => _.isPlainObject(maybeArg) ? rangeToArgs(maybeArg) : [maybeArg])
     .chunk(2)
-    .takeWhile(([name]) => name in (fieldSchema.args || {}))
+    .takeWhile(([name]) => name in fieldSchema.args)
     .fromPairs()
-    .mapValues((value, name) => ({value: value || '', type: fieldSchema.args[name].type.name}))
+    .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: fieldSchema.args[name].type.name || fieldSchema.args[name].type.ofType.name}))
     .value()
-  const restOfPath = _.drop(maybeArgs, Object.keys(args).length * 2)
-  const typeOfRestOfPath = fieldSchema.type.name
+  const numberOfPathSegmentTakenByArgs = (Object.keys(args).length * 2) - (3 * +rangeWasExpanded)
+  const restOfPath = _.drop(maybeArgs, numberOfPathSegmentTakenByArgs)
+  const typeOfRestOfPath = fieldSchema.type.name || fieldSchema.type.ofType.name
   return [{field, args}, ...groupArgs(restOfPath, typeOfRestOfPath, schema)]
+
+  function rangeToArgs ({from = 0, to = 1, length}) {
+    rangeWasExpanded = true
+    if (!length) length = to + 1
+    return ['from', from, 'length', length]
+  }
 }
 
 function getSchema () {

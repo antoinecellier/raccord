@@ -1,7 +1,7 @@
 import test from 'tape'
 import {translatePath, groupArgs, schemaKeyedByNames, collapseSelections} from './falcor-to-graphql'
 
-test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
+test('path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
     translatePath(['field']),
     [
@@ -17,7 +17,7 @@ test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.end()
 })
 
-test('one path with 2 simple segments', {objectPrintDepth: 20}, t => {
+test('path with 2 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
     translatePath(['field1', 'field2']),
     [
@@ -45,7 +45,7 @@ test('one path with 2 simple segments', {objectPrintDepth: 20}, t => {
   t.end()
 })
 
-test('one path with 1 simple segments and 1 nested segment at the end', {objectPrintDepth: 20}, t => {
+test('path with 1 simple segments and 1 nested segment at the end', {objectPrintDepth: 20}, t => {
   t.deepEqual(
     translatePath(['field1', ['child1', 'child2']]),
     [
@@ -70,6 +70,83 @@ test('one path with 1 simple segments and 1 nested segment at the end', {objectP
               name: {
                 kind: 'Name',
                 value: 'child2'
+              }
+            }
+          ]
+        }
+      }
+    ]
+  )
+  t.end()
+})
+
+test('path with range', {objectPrintDepth: 20}, t => {
+  t.deepEqual(
+    translatePath(
+      ['field1', {from: 0, to: 9}, 'field2'],
+      {
+        Query: {
+          fields: {
+            field1: {
+              args: {
+                from: {
+                  type: {
+                    name: 'Int'
+                  }
+                },
+                length: {
+                  type: {
+                    name: 'Int'
+                  }
+                }
+              },
+              type: {
+                name: 'Query'
+              }
+            }
+          }
+        }
+      }
+    ),
+    [
+      {
+        kind: 'Field',
+        name: {
+          kind: 'Name',
+          value: 'field1'
+        },
+        arguments: [
+          {
+            kind: 'Argument',
+            name: {
+              kind: 'Name',
+              value: 'from'
+            },
+            value: {
+              kind: 'IntValue',
+              value: 0
+            }
+          },
+          {
+            kind: 'Argument',
+            name: {
+              kind: 'Name',
+              value: 'length'
+            },
+            value: {
+              kind: 'IntValue',
+              value: 10
+            }
+          }
+        ],
+        selectionSet: {
+          kind: 'SelectionSet',
+          selections: [
+            {
+              kind: 'Field',
+              name: {
+                kind: 'Name',
+                value: 'field2'
               }
             }
           ]
@@ -146,12 +223,12 @@ test('args processing', t => {
         },
         TypeB: {
           fields: {
-            a: {type: {name: 'TypeA'}},
-            b: {type: {name: 'TypeA'}},
-            c: {type: {name: 'TypeB'}},
-            d: {type: {name: 'TypeB'}},
-            e: {type: {name: 'TypeB'}},
-            f: {type: {name: 'TypeB'}}
+            a: {type: {name: 'TypeA'}, args: {}},
+            b: {type: {name: 'TypeA'}, args: {}},
+            c: {type: {name: 'TypeB'}, args: {}},
+            d: {type: {name: 'TypeB'}, args: {}},
+            e: {type: {name: 'TypeB'}, args: {}},
+            f: {type: {name: 'TypeB'}, args: {}}
           }
         }
       }
@@ -170,6 +247,58 @@ test('args processing', t => {
       },
       {
         field: ['e', 'f'],
+        args: {}
+      }
+    ]
+  )
+  t.end()
+})
+
+test('args processing: range support', t => {
+  t.deepEqual(
+    // Actual
+    groupArgs(
+      // Falcor path
+      ['a', {from: 0, to: 9}, 'a'],
+      // Root type
+      'TypeA',
+      // GraphQL fields
+      {
+        TypeA: {
+          fields: {
+            a: {
+              args: {
+                from: {
+                  type: {
+                    name: 'Int'
+                  }
+                },
+                length: {
+                  type: {
+                    name: 'Int'
+                  }
+                }
+              },
+              type: {
+                name: null,
+                kind: 'LIST',
+                ofType: {
+                  name: 'TypeA'
+                }
+              }
+            }
+          }
+        }
+      }
+    ),
+    // Expected chunked path
+    [
+      {
+        field: 'a',
+        args: {from: {type: 'Int', value: 0}, length: {type: 'Int', value: 10}}
+      },
+      {
+        field: 'a',
         args: {}
       }
     ]

@@ -1,5 +1,5 @@
 import test from 'tape'
-import {translatePath, groupArgs, typesOfArgsByField} from './falcor-to-graphql'
+import {translatePath, groupArgs, typesOfArgsByField, collapseSelections} from './falcor-to-graphql'
 
 test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
@@ -12,7 +12,8 @@ test('one path with 1 simple segments', {objectPrintDepth: 20}, t => {
           value: 'field'
         }
       }
-    ])
+    ]
+  )
   t.end()
 })
 
@@ -39,7 +40,8 @@ test('one path with 2 simple segments', {objectPrintDepth: 20}, t => {
           ]
         }
       }
-    ])
+    ]
+  )
   t.end()
 })
 
@@ -73,7 +75,8 @@ test('one path with 1 simple segments and 1 nested segment at the end', {objectP
           ]
         }
       }
-    ])
+    ]
+  )
   t.end()
 })
 
@@ -134,6 +137,18 @@ test('args processing', t => {
         field: ['e', 'f'],
         args: {}
       }
-    ])
+    ]
+  )
+  t.end()
+})
+
+test('selection collapsing', t => {
+  t.deepEqual(
+    collapseSelections([
+      {name: {value: 'a'}, selectionSet: {selections: [{name: {value: 'b'}}]}},
+      {name: {value: 'a'}, selectionSet: {selections: [{name: {value: 'c'}}]}}
+    ]),
+    [{name: {value: 'a'}, selectionSet: {selections: [{name: {value: 'b'}}, {name: {value: 'c'}}]}}]
+  )
   t.end()
 })

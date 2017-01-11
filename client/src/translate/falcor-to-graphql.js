@@ -10,11 +10,11 @@ export default function translate (inputFalcor) {
   const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
   return getSchema().then(typesOfArgsByField).then(schema => {
     console.log('Falcor->GraphQL: translating path:', collapsedInputFalcor, schema)
-    const graphQlQueryAst = wrapInQuery(collapsedInputFalcor
+    const outputGraphQlAst = wrapInQuery(collapseSelections(collapsedInputFalcor
       .map(path => translatePath(path, schema))
-      .reduce((all, selections) => all.concat(selections)))
-    console.log('Falcor->GraphQL: translation output:', graphQlQueryAst)
-    return print(graphQlQueryAst)
+      .reduce((all, selections) => all.concat(selections))))
+    console.log('Falcor->GraphQL: translation output:', outputGraphQlAst)
+    return print(outputGraphQlAst)
   })
 }
 
@@ -30,12 +30,20 @@ function wrapInQuery (selections) {
         operation: 'query',
         selectionSet: {
           kind: 'SelectionSet',
-          // TODO: merge nodes based on functional identity (e.g. two selections are equal if same name and same args).
           selections
         }
       }
     ]
   }
+}
+
+export function collapseSelections (selections) {
+  return _(selections)
+    .groupBy(selection => selection.name.value + _.map(selection.arguments, arg => arg.name.value + arg.value.value).join(''))
+    .map(group => _.mergeWith(...group, (left, right, key) => {
+      if (key === 'selections') return collapseSelections(left.concat(right))
+    }))
+    .value()
 }
 
 /**

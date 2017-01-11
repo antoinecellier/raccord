@@ -9,24 +9,20 @@ export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
   const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
   return getSchema().then(typesOfArgsByField).then(schema => {
-    const graphQlQueryAsts = collapsedInputFalcor.map(path => translatePath(path, schema))
-    const mergedGraphQlQueryAsts = _.mergeWith(...graphQlQueryAsts, (left, right, key) => {
-      // TODO: avoid the 'definitions' special case by concatenating definitions before forming a document.
-      // TODO: merge nodes based on functional identity (e.g. two selections are equal if same name and same args).
-      if (Array.isArray(left) && key !== 'definitions') return left.concat(right)
-    })
-    return print(mergedGraphQlQueryAsts)
+    console.log('Falcor->GraphQL: translating path:', collapsedInputFalcor, schema)
+    const graphQlQueryAst = wrapInQuery(collapsedInputFalcor
+      .map(path => translatePath(path, schema))
+      .reduce((all, selections) => all.concat(selections)))
+    console.log('Falcor->GraphQL: translation output:', graphQlQueryAst)
+    return print(graphQlQueryAst)
   })
 }
 
 /**
- * Translate a falcor path to GraphQL document.
+ * Wraps a GraphQL selections array into a GraphQL query.
  */
-export function translatePath (path, schema) {
-  // TODO: move those logs one level up the stack
-  console.log('Falcor->GraphQL: translating path:', path, schema)
-  const argAwarePath = groupArgs(path, schema)
-  const rootGraphQlQuery = {
+function wrapInQuery (selections) {
+  return {
     kind: 'Document',
     definitions: [
       {
@@ -34,13 +30,19 @@ export function translatePath (path, schema) {
         operation: 'query',
         selectionSet: {
           kind: 'SelectionSet',
-          selections: translateArgAwarePath(argAwarePath)
+          // TODO: merge nodes based on functional identity (e.g. two selections are equal if same name and same args).
+          selections
         }
       }
     ]
   }
-  console.log('Falcor->GraphQL: translation output:', rootGraphQlQuery)
-  return rootGraphQlQuery
+}
+
+/**
+ * Translate a falcor path to a GraphQL selections array.
+ */
+export function translatePath (path, schema) {
+  return translateArgAwarePath(groupArgs(path, schema))
 }
 
 /**

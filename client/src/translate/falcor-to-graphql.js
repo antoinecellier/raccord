@@ -117,12 +117,16 @@ export function groupArgs (path, type, schema) {
     .chunk(2)
     .takeWhile(([name]) => name in fieldSchema.args)
     .fromPairs()
-    .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: fieldSchema.args[name].type.name || fieldSchema.args[name].type.ofType.name}))
+    .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: typeOf(fieldSchema.args[name])}))
     .value()
   const numberOfPathSegmentTakenByArgs = (Object.keys(args).length * 2) - (3 * +rangeWasExpanded)
   const restOfPath = _.drop(maybeArgs, numberOfPathSegmentTakenByArgs)
-  const typeOfRestOfPath = fieldSchema.type.name || fieldSchema.type.ofType.name
+  const typeOfRestOfPath = typeOf(fieldSchema)
   return [{field, args}, ...groupArgs(restOfPath, typeOfRestOfPath, schema)]
+
+  function typeOf (graphQlNode) {
+    return graphQlNode.type.name || graphQlNode.type.ofType.name
+  }
 
   function rangeToArgs ({from = 0, to = 1, length}) {
     rangeWasExpanded = true

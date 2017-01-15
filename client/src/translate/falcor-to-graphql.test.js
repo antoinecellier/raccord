@@ -1,5 +1,7 @@
 import test from 'tape'
-import {translatePath, groupArgs, schemaKeyedByNames, collapseSelections} from './falcor-to-graphql'
+import {GraphQLSchema} from 'graphql/type'
+import {buildSchema} from 'graphql/utilities'
+import {translatePath, groupArgs, collapseSelections} from './falcor-to-graphql'
 
 test('path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
@@ -84,29 +86,11 @@ test('path with range', {objectPrintDepth: 20}, t => {
   t.deepEqual(
     translatePath(
       ['field1', {from: 0, to: 9}, 'field2'],
-      {
-        Query: {
-          fields: {
-            field1: {
-              args: {
-                from: {
-                  type: {
-                    name: 'Int'
-                  }
-                },
-                length: {
-                  type: {
-                    name: 'Int'
-                  }
-                }
-              },
-              type: {
-                name: 'Query'
-              }
-            }
-          }
+      buildSchema(`
+        type Query {
+          field1(from: Int, length: Int): Query
         }
-      }
+      `)
     ),
     [
       {
@@ -157,46 +141,6 @@ test('path with range', {objectPrintDepth: 20}, t => {
   t.end()
 })
 
-test('schema processing', t => {
-  t.deepEqual(
-    schemaKeyedByNames({
-      types: [
-        {
-          name: 't',
-          fields: [
-            {
-              name: 'a',
-              args: [
-                {
-                  name: 'b',
-                  type: {name: 'String'}
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }),
-    {
-      t: {
-        name: 't',
-        fields: {
-          a: {
-            name: 'a',
-            args: {
-              b: {
-                name: 'b',
-                type: {name: 'String'}
-              }
-            }
-          }
-        }
-      }
-    }
-  )
-  t.end()
-})
-
 test('args processing', t => {
   t.deepEqual(
     // Actual
@@ -204,34 +148,21 @@ test('args processing', t => {
       // Falcor path
       ['a', 'b', 'c', 'd', ['e', 'f']],
       // Root type
-      'TypeA',
-      // GraphQL fields
-      {
-        TypeA: {
-          fields: {
-            a: {
-              type: {
-                name: 'TypeB'
-              },
-              args: {
-                b: {
-                  type: {name: 'String'}
-                }
-              }
-            }
-          }
-        },
-        TypeB: {
-          fields: {
-            a: {type: {name: 'TypeA'}, args: {}},
-            b: {type: {name: 'TypeA'}, args: {}},
-            c: {type: {name: 'TypeB'}, args: {}},
-            d: {type: {name: 'TypeB'}, args: {}},
-            e: {type: {name: 'TypeB'}, args: {}},
-            f: {type: {name: 'TypeB'}, args: {}}
-          }
+      'Query',
+      // GraphQL schema
+      buildSchema(`
+        type Query {
+          a(b: String): OtherType
         }
-      }
+        type OtherType {
+          a: Query
+          b: Query
+          c: OtherType
+          d: OtherType
+          e: OtherType
+          f: OtherType
+        }
+      `)
     ),
     // Expected chunked path
     [
@@ -261,35 +192,13 @@ test('args processing: range support', t => {
       // Falcor path
       ['a', {from: 0, to: 9}, 'a'],
       // Root type
-      'TypeA',
-      // GraphQL fields
-      {
-        TypeA: {
-          fields: {
-            a: {
-              args: {
-                from: {
-                  type: {
-                    name: 'Int'
-                  }
-                },
-                length: {
-                  type: {
-                    name: 'Int'
-                  }
-                }
-              },
-              type: {
-                name: null,
-                kind: 'LIST',
-                ofType: {
-                  name: 'TypeA'
-                }
-              }
-            }
-          }
+      'Query',
+      // GraphQL schema
+      buildSchema(`
+        type Query {
+          a(from: Int, length: Int): [Query]
         }
-      }
+      `)
     ),
     // Expected chunked path
     [

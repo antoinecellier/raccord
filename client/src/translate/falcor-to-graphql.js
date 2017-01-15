@@ -3,11 +3,12 @@ import falcorPathSyntax from 'falcor-path-syntax'
 import falcorPathUtils from 'falcor-path-utils'
 import fetch from 'isomorphic-fetch'
 import {print} from 'graphql/language/printer'
+import {buildClientSchema, introspectionQuery} from 'graphql/utilities'
 
 export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
   const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
-  return getSchema().then(schemaKeyedByNames).then(schema => {
+  return getSchema().then(schema => {
     console.log('Falcor->GraphQL: translating path:', collapsedInputFalcor, schema)
     const outputGraphQlAst = wrapInQuery(collapseSelections(collapsedInputFalcor
       .map(path => translatePath(path, schema))
@@ -83,24 +84,6 @@ function translateArgAwarePath (path) {
 }
 
 /**
- * Returns a simplified schema to pass to groupArgs.
- */
-export function schemaKeyedByNames (schema = {}) {
-  return _(schema.types)
-    .keyBy('name')
-    .mapValues(type => {
-      const keyedFields = _(type.fields)
-        .keyBy('name')
-        .mapValues(field => Object.assign({}, field, {
-          args: _.keyBy(field.args, 'name')
-        }))
-        .value()
-      return Object.assign({}, type, {fields: keyedFields})
-    })
-    .value()
-}
-
-/**
  * Groups fields with their arguments. Uses the GraphQL schema to detect
  * arguments.
  *
@@ -111,13 +94,13 @@ export function groupArgs (path, type, schema) {
   if (path.length === 0) return []
   let rangeWasExpanded = false // CAREFUL: mutated by inner function rangeToArgs
   const [field, ...maybeArgs] = path
-  const fieldSchema = _.get(schema, [type, 'fields', field], {args: {}, type: {name: type}})
+  const fieldSchema = schema && schema.getType(type).getFields()[field] || {args: {}, type: {name: type}}
   const args = _(maybeArgs)
     .flatMap(maybeArg => _.isPlainObject(maybeArg) ? rangeToArgs(maybeArg) : [maybeArg])
     .chunk(2)
-    .takeWhile(([name]) => name in fieldSchema.args)
+    .takeWhile(([name]) => _.some(fieldSchema.args, {name}))
     .fromPairs()
-    .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: typeOf(fieldSchema.args[name])}))
+    .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: typeOf(_.find(fieldSchema.args, {name}))}))
     .value()
   const numberOfPathSegmentTakenByArgs = (Object.keys(args).length * 2) - (3 * +rangeWasExpanded)
   const restOfPath = _.drop(maybeArgs, numberOfPathSegmentTakenByArgs)
@@ -140,35 +123,9 @@ function getSchema () {
   getSchema.schema = fetch('http://127.0.0.1:7080/graphql', {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({query: `{
-      __schema {
-        types {
-          name
-          fields {
-            name
-            type {
-              name
-              kind
-              ofType {
-                name
-                kind
-              }
-            }
-            args {
-              name
-              type {
-                name
-                ofType {
-                  name
-                }
-              }
-            }
-          }
-        }
-      }
-    }`})
+    body: JSON.stringify({query: introspectionQuery})
   })
   .then(response => response.json())
-  .then(response => response.data.__schema)
+  .then(response => buildClientSchema(response.data))
   return getSchema.schema
 }

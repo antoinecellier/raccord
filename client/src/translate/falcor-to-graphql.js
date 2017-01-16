@@ -4,6 +4,7 @@ import falcorPathUtils from 'falcor-path-utils'
 import fetch from 'isomorphic-fetch'
 import {print} from 'graphql/language/printer'
 import {buildClientSchema, introspectionQuery} from 'graphql/utilities'
+import {getNamedType} from 'graphql/type'
 
 export default function translate (inputFalcor) {
   const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
@@ -107,8 +108,8 @@ export function groupArgs (path, type, schema) {
   const typeOfRestOfPath = typeOf(fieldSchema)
   return [{field, args}, ...groupArgs(restOfPath, typeOfRestOfPath, schema)]
 
-  function typeOf (graphQlNode) {
-    return graphQlNode.type.name || graphQlNode.type.ofType.name
+  function typeOf ({type}) {
+    return getNamedType(type).name
   }
 
   function rangeToArgs ({from = 0, to = 1, length}) {
@@ -122,7 +123,7 @@ function getSchema () {
   if (getSchema.schema) return getSchema.schema
   getSchema.schema = fetch('http://127.0.0.1:7080/graphql', {
     method: 'post',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({query: introspectionQuery})
   })
   .then(response => response.json())

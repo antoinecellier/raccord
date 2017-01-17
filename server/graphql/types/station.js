@@ -1,3 +1,5 @@
+import DataLoader from 'dataloader'
+import { map } from 'lodash'
 import db, {aql} from '../../db'
 import Route from './route'
 
@@ -27,11 +29,24 @@ export const resolvers = {
     longitude ({ stop_lon }) {
       return stop_lon
     },
-    routes ({ stop_id }, {from, length}) {
-      return db().query(aql`
+    routes ({ stop_id }, { from, length }) {
+      return RoutesByStationIdLoader.load({ stop_id, from, length })
+    }
+  }
+}
+
+const getRoutesByStationIds = (stopIds) => {
+  const { from, length } = stopIds[0]
+  stopIds = map(stopIds, 'stop_id')
+
+  return new Promise((resolve, reject) => {
+    db().query(aql`
+      for stopId in ${stopIds}
+        let from = stopId.from
+
         let stops = (
           for stop in stops
-          filter stop.parent_station == ${stop_id}
+          filter stop.parent_station == stopId
           return stop.stop_id
         )
 
@@ -47,14 +62,20 @@ export const resolvers = {
           return trip.route_id
         )
 
-        for route in routes
-        filter route.route_id in routes_of_stops
-        limit ${from}, ${length}
-        return route
-      `).then(cursor => cursor.all())
-    }
-  }
+        let routes = (
+          for route in routes
+          filter route.route_id in routes_of_stops
+          limit ${from}, ${length}
+          return route
+        )
+
+      return routes
+    `).then(cursor => cursor.all())
+      .then(routes => resolve(routes))
+  });
 }
+
+const RoutesByStationIdLoader = new DataLoader(getRoutesByStationIds);
 
 export function stationDbId (stationDtoId) {
   return 'StopArea:' + stationDtoId

@@ -6,21 +6,34 @@ import {print} from 'graphql/language/printer'
 import {buildClientSchema, introspectionQuery} from 'graphql/utilities'
 import {getNamedType} from 'graphql/type'
 
+/**
+ * JSDoc not meant to be 100% correct but hints for humans.
+ *
+ * @typedef {(string|FalcorRange)} FalcorPathSegment
+ * @typedef {FalcorPathSegment[]} FalcorPath
+ * @typedef {string} FalcorPathSyntaxCode
+ * @typedef {(FalcorPath|FalcorPathSyntaxCode)[]} FalcorPathSet
+ */
+
+/**
+ * @param {FalcorPathSet} inputFalcor
+ */
 export default function translate (inputFalcor) {
-  const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
-  const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor)
+  /** @type {FalcorPath[]} */ const parsedInputFalcor = inputFalcor.map(path => typeof path === 'string' ? falcorPathSyntax(path) : path)
+  /** @type {FalcorPath[]} */ const collapsedInputFalcor = falcorPathUtils.collapse(parsedInputFalcor) // not really useful since collapseSelections would do that, but hey, less work! :D
   return getSchema().then(schema => {
     console.log('Falcor->GraphQL: translating path:', collapsedInputFalcor, schema)
-    const outputGraphQlAst = wrapInQuery(collapseSelections(collapsedInputFalcor
+    const graphQlSelections = collapsedInputFalcor
       .map(path => translatePath(path, schema))
-      .reduce((all, selections) => all.concat(selections))))
+      .reduce((all, selections) => all.concat(selections))
+    const outputGraphQlAst = wrapInQuery(collapseSelections(graphQlSelections))
     console.log('Falcor->GraphQL: translation output:', outputGraphQlAst)
     return print(outputGraphQlAst)
   })
 }
 
 /**
- * Wraps a GraphQL selections array into a GraphQL query.
+ * Wraps a GraphQL selections array into a full GraphQL query.
  */
 function wrapInQuery (selections) {
   return {
@@ -38,7 +51,13 @@ function wrapInQuery (selections) {
   }
 }
 
+/**
+ * Merges GraphQL selections that have the same prefix (same field, same args). This will yield more compact queries.
+ *
+ * @example a{b} and a{c} give a{b,c}
+ */
 export function collapseSelections (selections) {
+  // This function recursively merges selections bottom up.
   return _(selections)
     .groupBy(selection => selection.name.value + _.map(selection.arguments, arg => arg.name.value + arg.value.value).join(''))
     .map(group => _.mergeWith(...group, (left, right, key) => {
@@ -49,13 +68,35 @@ export function collapseSelections (selections) {
 
 /**
  * Translate a falcor path to a GraphQL selections array.
+ *
+ * @param {FalcorPath[]}
+ * @param {GraphQLSchema=}
+ * @returns {object[]} a GraphQL selections array; pass it to wrapInQuery to make a full GraphQL query
  */
 export function translatePath (path, schema) {
   return translateArgAwarePath(groupArgs(path, 'Query', schema))
 }
 
 /**
+ * These are used below, in translateArgAwarePath and groupArgs. They describe a intermediate representation
+ * between a Falcor path the corresponding GraphQL selections array.
+ *
+ * @typedef {FieldArgsGroup[]} ArgAwarePath
+ *
+ * @typedef {object} FieldArgsGroup
+ * @property {string} field
+ * @property {Arg[]} args
+ *
+ * @typedef {object} Arg
+ * @property {any} value
+ * @property {string} type
+ */
+
+/**
  * Translates a path returned by groupArgs to a GraphQL selections array.
+ *
+ * @param {ArgAwarePath} path
+ * @returns {object[]} a GraphQL selections array; pass it to wrapInQuery to make a full GraphQL query
  */
 function translateArgAwarePath (path) {
   if (path.length === 0) return []
@@ -78,6 +119,8 @@ function translateArgAwarePath (path) {
         selections: translateArgAwarePath(rest)
       }
     }
+    // GraphQL does not like empty nodes. It will error out on them when printing.
+    // We have to strip empty nodes.
     if (_.isEmpty(gqlNode.arguments)) delete gqlNode.arguments
     if (_.isEmpty(gqlNode.selectionSet.selections)) delete gqlNode.selectionSet
     return gqlNode
@@ -85,15 +128,22 @@ function translateArgAwarePath (path) {
 }
 
 /**
- * Groups fields with their arguments. Uses the GraphQL schema to detect
- * arguments.
+ * Groups fields with their arguments. Uses the GraphQL schema to detect arguments.
  *
- * @argument path falcor path
- * @argument schema output from schemaKeyedByNames
+ * @param {(string|object)[]|} path falcor path
+ * @param {string} type a type from the GraphQL schema which the path is relative to; the first segment of the path should be a field name from this type
+ * @param {GraphQLSchema=} schema GraphQL schema returned by getSchema; if undefined, everything path segment is assumed to be a field
+ * @returns {ArgAwarePath}
  */
 export function groupArgs (path, type, schema) {
+  // This function is recursive and one pass of it only moves forward one field into the model.
+  // It attempts to capture the field (which name is the first segment of the given path) and its arguments (if there are any).
+  // As soon as it encounters a path segment that is not an argument to the first field, it assumes it is the next field down the model and recurses.
   if (path.length === 0) return []
   let rangeWasExpanded = false // CAREFUL: mutated by inner function rangeToArgs
+  // We are sure the first segment is a field into the given type (that's the function contract).
+  // Everything after that might be arguments to this field, or that might be other fields.
+  // We have to scan the segments until we find the first segment that is not an argument name (according to the schema).
   const [field, ...maybeArgs] = path
   const fieldSchema = schema && schema.getType(type).getFields()[field] || {args: {}, type: {name: type}}
   const args = _(maybeArgs)
@@ -103,6 +153,9 @@ export function groupArgs (path, type, schema) {
     .fromPairs()
     .mapValues((value, name) => ({value: _.isNil(value) ? '' : value, type: typeOf(_.find(fieldSchema.args, {name}))}))
     .value()
+  // So now we have the arguments but we have lost the information of how many segments they take up in the original path.
+  // We have to re-compute this to strip those segment from the original path and continue to process the rest of the path.
+  // Beware of the nasty rangeWasExpanded which is true when a Falcor range object was expanded to normal-looking arguments (that is, rangeToArgs was called).
   const numberOfPathSegmentTakenByArgs = (Object.keys(args).length * 2) - (3 * +rangeWasExpanded)
   const restOfPath = _.drop(maybeArgs, numberOfPathSegmentTakenByArgs)
   const typeOfRestOfPath = typeOf(fieldSchema)
@@ -112,8 +165,11 @@ export function groupArgs (path, type, schema) {
     return getNamedType(type).name
   }
 
+  /**
+   * Transforms a Falcor range object to an array of 4 elements so it looks like 2 argument pairs
+   */
   function rangeToArgs ({from = 0, to = 1, length}) {
-    rangeWasExpanded = true
+    rangeWasExpanded = true // this will trigger proper calculation of numberOfPathSegmentTakenByArgs
     if (!length) length = to + 1
     return ['from', from, 'length', length]
   }

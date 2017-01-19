@@ -26,7 +26,7 @@ export default function translate (inputFalcor) {
     const graphQlSelections = collapsedInputFalcor
       .map(path => translatePath(path, schema))
       .reduce((all, selections) => all.concat(selections))
-    const outputGraphQlAst = wrapInQuery(collapseSelections(graphQlSelections))
+    const outputGraphQlAst = wrapInQuery(aliasSelections(collapseSelections(graphQlSelections)))
     console.log('Falcor->GraphQL: translation output:', outputGraphQlAst)
     return print(outputGraphQlAst)
   })
@@ -54,7 +54,7 @@ function wrapInQuery (selections) {
 /**
  * Merges GraphQL selections that have the same prefix (same field, same args). This will yield more compact queries.
  *
- * @example a{b} and a{c} give a{b,c}
+ * @example a{b} and a{c} => a{b,c}
  */
 export function collapseSelections (selections) {
   // This function recursively merges selections bottom up.
@@ -63,6 +63,28 @@ export function collapseSelections (selections) {
     .map(group => _.mergeWith(...group, (left, right, key) => {
       if (key === 'selections') return collapseSelections(left.concat(right))
     }))
+    .value()
+}
+
+/**
+ * Defines alias for fields where the query would otherwise be invalid.
+ * This happens when a field is requested multiple times with different arguments.
+ *
+ * @example a(b:1){},a(b:2){} => a1:a(b:1){},a2:a(b:2){}
+ *
+ * Use collapseSelections first to merge selections that can be merged instead of aliased.
+ *
+ */
+export function aliasSelections (selections) {
+  return _(selections)
+    .groupBy(selection => selection.name.value)
+    .map(group => group.length > 1 ? _.map(group, selection => Object.assign({}, selection, {
+      alias: {
+        kind: 'Name',
+        value: selection.name.value + _.uniqueId()
+      }
+    })) : group)
+    .flatten()
     .value()
 }
 

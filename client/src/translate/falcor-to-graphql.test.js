@@ -1,7 +1,7 @@
 import test from 'tape'
 import {GraphQLSchema} from 'graphql/type'
 import {buildSchema} from 'graphql/utilities'
-import {translatePath, groupArgs, collapseSelections} from './falcor-to-graphql'
+import {translatePath, groupArgs, collapseSelections, aliasSelections} from './falcor-to-graphql'
 
 test('path with 1 simple segments', {objectPrintDepth: 20}, t => {
   t.deepEqual(
@@ -223,5 +223,26 @@ test('selection collapsing', t => {
     ]),
     [{name: {value: 'a'}, selectionSet: {selections: [{name: {value: 'b'}}, {name: {value: 'c'}}]}}]
   )
+  t.end()
+})
+
+test('selection aliasing: should alias', t => {
+  const [first, second] = aliasSelections([
+    {name: {value: 'a'}, arguments: [{name: {value: 'x'}, value: {value: 'x'}}], selectionSet: {selections: [{name: {value: 'b'}}]}},
+    {name: {value: 'a'}, arguments: [{name: {value: 'x'}, value: {value: 'y'}}], selectionSet: {selections: [{name: {value: 'b'}}]}}
+  ])
+  t.assert(first.alias.value)
+  t.assert(second.alias.value)
+  t.notEqual(first.alias.value, second.alias.value)
+  t.end()
+})
+
+test('selection aliasing: should not alias', t => {
+  const [first, second] = aliasSelections([
+    {name: {value: 'a'}},
+    {name: {value: 'b'}}
+  ])
+  t.notOk(first.alias)
+  t.notOk(second.alias)
   t.end()
 })

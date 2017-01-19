@@ -9,6 +9,7 @@ import {getNamedType} from 'graphql/type'
 /**
  * JSDoc not meant to be 100% correct but hints for humans.
  *
+ * @typedef {object} FalcorRange http://netflix.github.io/falcor/doc/global.html#Range
  * @typedef {(string|FalcorRange)} FalcorPathSegment
  * @typedef {FalcorPathSegment[]} FalcorPath
  * @typedef {string} FalcorPathSyntaxCode
@@ -101,7 +102,7 @@ export function translatePath (path, schema) {
 
 /**
  * These are used below, in translateArgAwarePath and groupArgs. They describe a intermediate representation
- * between a Falcor path the corresponding GraphQL selections array.
+ * between a Falcor path and the corresponding GraphQL selections array.
  *
  * @typedef {FieldArgsGroup[]} ArgAwarePath
  *
@@ -154,7 +155,7 @@ function translateArgAwarePath (path) {
  *
  * @param {(string|object)[]|} path falcor path
  * @param {string} type a type from the GraphQL schema which the path is relative to; the first segment of the path should be a field name from this type
- * @param {GraphQLSchema=} schema GraphQL schema returned by getSchema; if undefined, everything path segment is assumed to be a field
+ * @param {GraphQLSchema=} schema GraphQL schema returned by getSchema; if undefined, all path segments are assumed to be fields
  * @returns {ArgAwarePath}
  */
 export function groupArgs (path, type, schema) {
@@ -188,7 +189,7 @@ export function groupArgs (path, type, schema) {
   }
 
   /**
-   * Transforms a Falcor range object to an array of 4 elements so it looks like 2 argument pairs
+   * Transforms a Falcor range object to an array of 4 elements so it looks like 2 argument pairs.
    */
   function rangeToArgs ({from = 0, to = 1, length}) {
     rangeWasExpanded = true // this will trigger proper calculation of numberOfPathSegmentTakenByArgs

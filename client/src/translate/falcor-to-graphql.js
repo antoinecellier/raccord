@@ -92,7 +92,7 @@ export function aliasSelections (selections) {
 /**
  * Translate a falcor path to a GraphQL selections array.
  *
- * @param {FalcorPath[]}
+ * @param {FalcorPath}
  * @param {GraphQLSchema=}
  * @returns {object[]} a GraphQL selections array; pass it to wrapInQuery to make a full GraphQL query
  */
@@ -153,7 +153,7 @@ function translateArgAwarePath (path) {
 /**
  * Groups fields with their arguments. Uses the GraphQL schema to detect arguments.
  *
- * @param {(string|object)[]|} path falcor path
+ * @param {FalcorPath} path falcor path
  * @param {string} type a type from the GraphQL schema which the path is relative to; the first segment of the path should be a field name from this type
  * @param {GraphQLSchema=} schema GraphQL schema returned by getSchema; if undefined, all path segments are assumed to be fields
  * @returns {ArgAwarePath}

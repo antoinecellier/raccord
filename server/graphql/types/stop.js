@@ -58,7 +58,3 @@ export const resolvers = {
     }
   }
 }
-
-export function stopDbId (stopDtoId) {
-  return 'StopPoint:' + stopDtoId
-}

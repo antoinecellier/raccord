@@ -30,7 +30,7 @@ export default express.Router()
     const cursor = yield db().query(aql`
       let children_stops = (
         for stop in stops
-        filter stop.parent_station == ${stationDbId(id)}
+        filter stop.parent_station == ${id}
         return stop.stop_id)
 
       let connected_trips = (
@@ -44,7 +44,7 @@ export default express.Router()
         return trip.route_id)
 
       for stop in stops
-      filter stop.stop_id == ${stationDbId(id)}
+      filter stop.stop_id == ${id}
       return {stop: stop, routes: connected_routes}
     `)
     const station = yield cursor.next()
@@ -52,12 +52,8 @@ export default express.Router()
     res.json(stationDto(station))
   }))
 
-export function stationDbId (stationDtoId) {
-  return 'StopArea:' + stationDtoId
-}
-
 export function stationDtoId (stopDbId) {
-  return 'stations/' + stopDbId.split(':')[1]
+  return `stations/${stopDbId}`
 }
 
 export function stationDto ({stop: {stop_id, stop_name, stop_lat, stop_lon}, routes}) {

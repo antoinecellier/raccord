@@ -16,7 +16,7 @@ export default () => [Station, Route]
 export const resolvers = {
   Station: {
     id ({ stop_id }) {
-      return stop_id.split(':')[1]
+      return stop_id
     },
     label ({ stop_name }) {
       return stop_name
@@ -54,8 +54,4 @@ export const resolvers = {
       `).then(cursor => cursor.all())
     }
   }
-}
-
-export function stationDbId (stationDtoId) {
-  return 'StopArea:' + stationDtoId
 }

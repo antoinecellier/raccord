@@ -234,13 +234,12 @@ export default express.Router()
   .use(bodyParser.urlencoded({extended: false}))
   .use('/', falcor(() => new FalcorRouter(routes)))
 
-
 function stationDbId (stationDtoId) {
-  return 'StopArea:' + stationDtoId
+  return stationDtoId
 }
 
 function stationDtoId (stopDbId) {
-  return stopDbId.split(':')[1]
+  return stopDbId
 }
 
 function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
@@ -266,13 +265,15 @@ function stopDto ({stop_time: {stop_sequence, departure_time}, trip: {trip_id, r
   }
 }
 
-
 function routeDbId (routeDtoId) {
-  return routeDtoId + '-0'
+  // if it's parsable as a number, it will be a number in the db
+  // courtesy of our import technique and/or Arango type inference :(
+  const asNumber = Number(routeDtoId)
+  return isNaN(asNumber) ? routeDtoId : asNumber
 }
 
 function routeDtoId (routeDbId) {
-  return routeDbId.split('-')[0]
+  return String(routeDbId)
 }
 
 function routeDto ({route_id, route_short_name, route_long_name}) {

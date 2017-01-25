@@ -17,13 +17,15 @@ export default express.Router()
     res.json(routeDto(route))
   }))
 
-
 export function routeDbId (routeDtoId) {
-  return `${routeDtoId}-0`
+  // if it's parsable as a number, it will be a number in the db
+  // courtesy of our import technique and/or Arango type inference :(
+  const asNumber = Number(routeDtoId)
+  return isNaN(asNumber) ? routeDtoId : asNumber
 }
 
 export function routeDtoId (routeDbId) {
-  return 'routes/' + routeDbId.split('-')[0]
+  return `routes/${routeDbId}`
 }
 
 export function routeDto ({route_id, route_short_name, route_long_name}) {

@@ -34,8 +34,7 @@ const routes = [
         limit ${from}, ${to - from + 1}
         return stop.stop_id
       `)
-      const stationDtoIds = yield cursor.map(stationDtoId)
-      return stationDtoIds.map((stationId, index) => ({
+      return yield cursor.map((stationId, index) => ({
         path: [stations, alphabetical, from + index],
         value: {$type: 'ref', value: [stations, 'byId', stationId]}
       }))
@@ -52,8 +51,7 @@ const routes = [
         limit ${from}, ${to - from + 1}
         return stop.stop_id
       `)
-      const stationDtoIds = yield cursor.map(stationDtoId)
-      return stationDtoIds.map((stationId, index) => ({
+      return yield cursor.map((stationId, index) => ({
         path: [stations, search, query, from + index],
         value: {$type: 'ref', value: [stations, 'byId', stationId]}
       }))
@@ -64,7 +62,7 @@ const routes = [
     get: co.wrap(function* ([stations, byId, ids, routes, keys]) {
       const [{from, to} = {from: 0, to: -1}] = ranges(keys)
       const cursor = yield db().query(aql`
-        for station_id in ${ids.map(stationDbId)}
+        for station_id in ${ids}
           let children_stops = (
             for stop in stops
             filter stop.parent_station == station_id
@@ -89,13 +87,13 @@ const routes = [
           return {stationId: station_id, routeIds: route_ids, routeCount: length(connected_routes)}
       `)
       return flatten(yield cursor.map(({stationId, routeIds, routeCount}) => routeIds.map((routeId, index) => ({
-        path: [stations, byId, stationDtoId(stationId), routes, index],
+        path: [stations, byId, stationId, routes, index],
         value: {$type: 'ref', value: [routes, byId, routeDtoId(routeId)]}
       })).concat({
-        path: [stations, byId, stationDtoId(stationId), routes, 'length'],
+        path: [stations, byId, stationId, routes, 'length'],
         value: routeCount
       }).concat(Array(Math.max(0, to - routeIds.length + 1)).fill().map((zero, index) => ({
-        path: [stations, byId, stationDtoId(stationId), routes, routeIds.length + index],
+        path: [stations, byId, stationId, routes, routeIds.length + index],
         value: {$type: 'atom'}
       })))))
     })
@@ -105,7 +103,7 @@ const routes = [
     get: co.wrap(function* ([stations, byId, ids, props]) {
       const cursor = yield db().query(aql`
         for stop in stops
-        filter stop.stop_id in ${ids.map(stationDbId)}
+        filter stop.stop_id in ${ids}
         return stop
       `)
       const stationDtos = yield cursor.map(stationDto)
@@ -123,8 +121,7 @@ const routes = [
         filter favorite_stop.user_id == ${userId}
         return favorite_stop.stop_id
       `)
-      const stationDtoIds = yield cursor.map(stationDtoId)
-      return stationDtoIds.map((stationId, index) => ({
+      return yield cursor.map((stationId, index) => ({
         path: [stations, favorites, userId, from + index],
         value: {$type: 'ref', value: [stations, 'byId', stationId]}
       }))
@@ -140,12 +137,12 @@ const routes = [
           return favorite_stop)
         let the_favorite = (
           for favorite_stop in user_favorites
-          filter favorite_stop.stop_id == ${stationDbId(stationId)}
+          filter favorite_stop.stop_id == ${stationId}
           return favorite_stop)[0]
         let index_of_old = position(user_favorites, the_favorite, true)
         let index_of_new = index_of_old >= 0 ? index_of_old : length(user_favorites)
-        upsert {stop_id: ${stationDbId(stationId)}, user_id: ${userId}}
-        insert {stop_id: ${stationDbId(stationId)}, user_id: ${userId}}
+        upsert {stop_id: ${stationId}, user_id: ${userId}}
+        insert {stop_id: ${stationId}, user_id: ${userId}}
         update {}
         in favorite_stops
         return index_of_new
@@ -167,7 +164,7 @@ const routes = [
           return favorite_stop)
         let the_favorite = (
           for favorite_stop in user_favorites
-          filter favorite_stop.stop_id == ${stationDbId(stationId)}
+          filter favorite_stop.stop_id == ${stationId}
           return favorite_stop)[0]
         let index_of_old = position(user_favorites, the_favorite, true)
         remove the_favorite in favorite_stops options {ignoreErrors: true}
@@ -197,7 +194,7 @@ const routes = [
           for trip in trips
             filter trip.service_id == service.service_id
             for stop in stops
-              filter stop.parent_station == ${stationDbId(station)}
+              filter stop.parent_station == ${station}
               for stop_time in stop_times
                 filter stop_time.stop_id == stop.stop_id && stop_time.trip_id == trip.trip_id && stop_time.departure_time >= ${afterTime}
                 sort stop_time.departure_time
@@ -234,18 +231,9 @@ export default express.Router()
   .use(bodyParser.urlencoded({extended: false}))
   .use('/', falcor(() => new FalcorRouter(routes)))
 
-
-function stationDbId (stationDtoId) {
-  return 'StopArea:' + stationDtoId
-}
-
-function stationDtoId (stopDbId) {
-  return stopDbId.split(':')[1]
-}
-
 function stationDto ({stop_id, stop_name, stop_lat, stop_lon}) {
   return {
-    id: stationDtoId(stop_id),
+    id: stop_id,
     label: stop_name,
     latitude: stop_lat,
     longitude: stop_lon
@@ -266,13 +254,15 @@ function stopDto ({stop_time: {stop_sequence, departure_time}, trip: {trip_id, r
   }
 }
 
-
 function routeDbId (routeDtoId) {
-  return routeDtoId + '-0'
+  // if it's parsable as a number, it will be a number in the db
+  // courtesy of our import technique and/or Arango type inference :(
+  const asNumber = Number(routeDtoId)
+  return isNaN(asNumber) ? routeDtoId : asNumber
 }
 
 function routeDtoId (routeDbId) {
-  return routeDbId.split('-')[0]
+  return String(routeDbId)
 }
 
 function routeDto ({route_id, route_short_name, route_long_name}) {

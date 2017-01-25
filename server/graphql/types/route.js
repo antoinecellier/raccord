@@ -11,7 +11,7 @@ export default () => [Route]
 export const resolvers = {
   Route: {
     id ({ route_id }) {
-      return route_id.split('-')[0]
+      return route_id
     },
     label ({ route_short_name }) {
       return route_short_name

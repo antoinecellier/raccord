@@ -86,6 +86,12 @@ export function aliasSelections (selections) {
       }
     })) : group)
     .flatten()
+    .map(selection => {
+      const nestedSelections = _.get(selection, 'selectionSet.selections')
+      return nestedSelections
+        ? _.set(selection, 'selectionSet.selections', aliasSelections(nestedSelections))
+        : selection
+    })
     .value()
 }
 

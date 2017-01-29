@@ -197,7 +197,7 @@ export function groupArgs (path, type, schema) {
     const numberOfPathSegmentTakenByArgs = Object.keys(args).length * 2
     const restOfPath = _.drop(maybeArgs, numberOfPathSegmentTakenByArgs)
     const typeOfRestOfPath = typeOf(fieldSchema)
-    return [{field, args}, ...groupArgs(restOfPath, typeOfRestOfPath, schema)]
+    return [{field, args}, ...actuallyGroupArgs(restOfPath, typeOfRestOfPath, schema)]
 
     function typeOf ({type}) {
       return getNamedType(type).name

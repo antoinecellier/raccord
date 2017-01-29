@@ -165,8 +165,12 @@ function translateArgAwarePath (path) {
  * @returns {ArgAwarePath}
  */
 export function groupArgs (path, type, schema) {
-  const pathWithRangesAsArgs = _.flatMap(path, segment => _.isPlainObject(segment) ? rangeToArgs(segment) : [segment])
-  return actuallyGroupArgs(pathWithRangesAsArgs, type, schema)
+  const pathWithConsistentArgs = _.flatMap(path, segment => {
+    if (_.isNumber(segment)) return rangeToArgs({from: segment, length: 1})
+    if (_.isPlainObject(segment)) return rangeToArgs(segment)
+    return [segment]
+  })
+  return actuallyGroupArgs(pathWithConsistentArgs, type, schema)
 
   /**
    * Transforms a Falcor range object to an array of 4 elements so it looks like 2 argument pairs.

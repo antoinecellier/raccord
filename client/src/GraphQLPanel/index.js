@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import GraphiQL from 'graphiql'
 import fetch from 'isomorphic-fetch'
 import './graphiql.css'
+import {parse} from 'graphql/language/parser'
 
 export default class GraphQLPanel extends Component {
   constructor (props) {
@@ -26,7 +27,7 @@ export default class GraphQLPanel extends Component {
           })
       },
       handleQueryChanged: query => {
-        console.log(query)
+        console.debug('new GraphQL request entered:', parse(query))
         this.setState({query})
         this.props.onChange(query)
       },

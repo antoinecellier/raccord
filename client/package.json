@@ -40,6 +40,7 @@
     "brace": "^0.8.0",
     "falcor": "^0.1.17",
     "falcor-path-syntax": "^0.2.4",
+    "falcor-path-utils": "^0.5.1",
     "graphiql": "^0.7.8",
     "graphql": "^0.7.0",
     "hoc-react-loader": "^3.0.0",
@@ -52,6 +53,6 @@
   "scripts": {
     "start": "node ./scripts/start.js",
     "build": "node ./scripts/build.js",
-    "test": "babel-node --plugins transform-es2015-modules-commonjs src/translate/graphql-to-falcor.test.js | faucet"
+    "test": "babel-node --plugins transform-es2015-modules-commonjs src/translate/translate.test.js | faucet"
   }
 }

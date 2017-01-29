@@ -172,7 +172,7 @@ export function groupArgs (path, type, schema) {
    * Transforms a Falcor range object to an array of 4 elements so it looks like 2 argument pairs.
    */
   function rangeToArgs ({from = 0, to = 1, length}) {
-    if (!length) length = to + 1
+    if (!length) length = to - from + 1
     return ['from', from, 'length', length]
   }
 

@@ -5,7 +5,7 @@ import Station from './types/station'
 
 const Query = `
   type Query {
-    stations(search: String, from: Int!, length: Int!): [Station],
+    stations(search: String, line: String, from: Int!, length: Int!): [Station],
     favoriteStations(user: String!, from: Int!, length: Int!): [Station],
     stops(stationId: String!, after: String!, from: Int!, length: Int!): [Stop]
   }
@@ -15,14 +15,36 @@ export default () => [Query, Station, Stop]
 
 export const resolvers = {
   Query: {
-    stations (_, { search = '', from, length }) {
-      return db().query(aql`
+    stations (_, { search = '', line = '', from, length }) {
+      return db().query(
+        aql`
+          let route_ids = (
+              for route in routes
+              return route.route_id
+          )
+
+          let trip_ids_by_route_id = (
+            for trip in trips
+            filter (trip.route_id == ${line}) || (${line} == '' && trip.route_id in route_ids)
+            return trip.trip_id)
+
+          let stop_ids_by_trip = (
+            for stop_time in stop_times
+            filter stop_time.trip_id in trip_ids_by_route_id
+            return stop_time.stop_id)
+
+          let parent_stations = (
+            for stop in stops
+            filter stop.stop_id in stop_ids_by_trip
+            return stop.parent_station)
+
           for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
-          filter stop.location_type == 1
+          filter stop.location_type == 1 && stop.stop_id in parent_stations
           sort stop.stop_name asc
           limit ${from}, ${length}
           return stop
-        `).then(cursor => cursor.all())
+        `
+      ).then(cursor => cursor.all())
     },
     favoriteStations (_, { user, from, length }) {
       return db().query(aql`

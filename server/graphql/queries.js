@@ -18,14 +18,9 @@ export const resolvers = {
     stations (_, { search = '', line = '', from, length }) {
       return db().query(
         aql`
-          let route_ids = (
-              for route in routes
-              return route.route_id
-          )
-
           let trip_ids_by_route_id = (
             for trip in trips
-            filter (trip.route_id == ${line}) || (${line} == '' && trip.route_id in route_ids)
+            filter trip.route_id == ${line}
             return trip.trip_id)
 
           let stop_ids_by_trip = (
@@ -39,7 +34,7 @@ export const resolvers = {
             return stop.parent_station)
 
           for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
-          filter stop.location_type == 1 && stop.stop_id in parent_stations
+          filter stop.location_type == 1 && (${line} == '' || stop.stop_id in parent_stations)
           sort stop.stop_name asc
           limit ${from}, ${length}
           return stop

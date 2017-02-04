@@ -8,6 +8,7 @@ const Stop = `
     name: String!,
     latitude: Float!,
     longitude: Float!,
+    wheelchairBoarding: Boolean!,
     parent_station: Station,
     routes: [Route]
   }
@@ -28,6 +29,9 @@ export const resolvers = {
     },
     longitude ({ stop_lon }) {
       return stop_lon
+    },
+    wheelchairBoarding ({ wheelchair_boarding }) {
+      return wheelchair_boarding
     },
     parent_station ({ parent_station }) {
       return db().query(aql`

@@ -1,11 +1,12 @@
 import moment from 'moment'
+import { isBoolean, isUndefined } from 'lodash';
 import db, {aql} from '../db'
 import Stop from './types/stop'
 import Station from './types/station'
 
 const Query = `
   type Query {
-    stations(search: String, line: String, from: Int!, length: Int!): [Station],
+    stations(search: String, line: String, wheelchairBoarding: Boolean, from: Int!, length: Int!): [Station],
     favoriteStations(user: String!, from: Int!, length: Int!): [Station],
     stops(stationId: String!, after: String!, from: Int!, length: Int!): [Stop]
   }
@@ -15,7 +16,9 @@ export default () => [Query, Station, Stop]
 
 export const resolvers = {
   Query: {
-    stations (_, { search = '', line = '', from, length }) {
+    stations (_, { search = '', line = '', wheelchairBoarding, from, length }) {
+      const wheelchairBoardingBool = isBoolean(wheelchairBoarding) ? wheelchairBoarding : false;
+      console.log(line)
       return db().query(
         aql`
           let trip_ids_by_route_id = (
@@ -28,13 +31,21 @@ export const resolvers = {
             filter stop_time.trip_id in trip_ids_by_route_id
             return stop_time.stop_id)
 
-          let parent_stations = (
+          let parent_stations_by_line = (
             for stop in stops
             filter stop.stop_id in stop_ids_by_trip
             return stop.parent_station)
 
+          let parent_stations_by_wheelchair_boarding = (
+            for stop in stops
+            filter (${wheelchairBoardingBool} || stop.wheelchair_boarding == 0)
+            and (!${wheelchairBoardingBool} || stop.wheelchair_boarding == 1)
+            return stop.parent_station)
+
           for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
-          filter stop.location_type == 1 && (${line} == '' || stop.stop_id in parent_stations)
+          filter stop.location_type == 1
+          and (${line === ''} || stop.stop_id in parent_stations_by_line)
+          and (${wheelchairBoarding === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
           sort stop.stop_name asc
           limit ${from}, ${length}
           return stop

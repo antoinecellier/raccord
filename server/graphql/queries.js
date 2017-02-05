@@ -6,7 +6,7 @@ import Station from './types/station'
 
 const Query = `
   type Query {
-    stations(search: String, line: String, wheelchairBoarding: Boolean, from: Int!, length: Int!): [Station],
+    stations(search: String, line: String, wheelchairBoarding: Boolean, near: Boolean, from: Int!, length: Int!): [Station],
     favoriteStations(user: String!, from: Int!, length: Int!): [Station],
     stops(stationId: String!, after: String!, from: Int!, length: Int!): [Stop]
   }
@@ -16,9 +16,11 @@ export default () => [Query, Station, Stop]
 
 export const resolvers = {
   Query: {
-    stations (_, { search = '', line = '', wheelchairBoarding, from, length }) {
+    stations (_, { search = '', line = '', wheelchairBoarding, near = false, from, length }) {
       const wheelchairBoardingBool = isBoolean(wheelchairBoarding) ? wheelchairBoarding : false;
-      console.log(line)
+
+      // Laboratoire d'informatique de Grenoble (Snowcamp)
+      const currentPosition = { latitude: 45.19228, longitude: 45.19228}
       return db().query(
         aql`
           let trip_ids_by_route_id = (
@@ -42,8 +44,14 @@ export const resolvers = {
             and (!${wheelchairBoardingBool} || stop.wheelchair_boarding == 1)
             return stop.parent_station)
 
-          for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
+          let stops_by_search = (
+              for stop in (${search} ? fulltext(stops, "stop_name", concat("prefix:", ${search})) : stops)
+              return stop.stop_id
+          )
+
+          for stop in (${near} ? near("stops", ${currentPosition.latitude}, ${currentPosition.longitude}) : stops)
           filter stop.location_type == 1
+          and (${search === undefined} || stop.stop_id in stops_by_search)
           and (${line === ''} || stop.stop_id in parent_stations_by_line)
           and (${wheelchairBoarding === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
           sort stop.stop_name asc

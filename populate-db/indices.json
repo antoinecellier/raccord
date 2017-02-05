@@ -13,6 +13,7 @@
   {"collection": "stops", "fields": ["location_type"], "type": "hash"},
   {"collection": "stops", "fields": ["parent_station"], "type": "hash", "sparse": true},
   {"collection": "stops", "fields": ["stop_name"], "type": "fulltext", "minLength": 3},
+  {"collection": "stops", "geo" : ["stop_lon", "stop_lat"]},
   {"collection": "stop_times", "fields": ["stop_id"], "type": "hash"},
   {"collection": "stop_times", "fields": ["stop_id", "trip_id"], "type": "hash"},
   {"collection": "stop_times", "fields": ["trip_id", "stop_sequence"], "type": "hash", "unique": true},

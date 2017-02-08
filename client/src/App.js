@@ -61,6 +61,10 @@ export default class App extends Component {
     this.setState({response})
   }
 
+  handleErrorResponse (err) {
+    this.setState({response: {err}})
+  }
+
   render () {
     const {falcor, graphql} = this.state
     return (
@@ -71,12 +75,14 @@ export default class App extends Component {
             request={falcor.request}
             onRequestChange={request => this.handleFalcorRequestChanged(request)}
             onRequestFired={request => this.handleRequestFired(request)}
-            onResponse={response => this.handleResponse(response)} />
+            onResponse={response => this.handleResponse(response)}
+            onError={err => this.handleErrorResponse(err)}/>
           <GraphQLPanel
             content={graphql}
             onChange={request => this.handleGraphQlRequestChanged(request)}
             onRequestFired={request => this.handleRequestFired(request)}
-            onResponse={response => this.handleResponse(response)} />
+            onResponse={response => this.handleResponse(response)}
+            onError={err => this.handleErrorResponse(err)}/>
           <ResponsePanel content={this.state.response} style={{flex: 1, alignSelf: 'center'}} />
         </div>
       </div>

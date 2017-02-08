@@ -58,6 +58,58 @@ const routes = [
     })
   },
   {
+    route: 'stations.near[{keys:nearEnabled}].wheelchairBoarding[{keys:wheelchairBoardingEnabled}].line[{keys:lineNumbers}].search[{keys:queries}][{ranges:indices}]',
+    get: co.wrap(function* ([stations, near, [nearEnabled], wheelchairBoarding, [wheelchairBoardingEnabled], line, [lineNumber], search, [query], [{from, to}]]) {
+      // Laboratoire d'informatique de Grenoble (Snowcamp)
+      const currentPosition = { latitude: 45.19228, longitude: 5.7650086}
+
+      const cursor = yield db().query(aql`
+        let route_ids_by_short_name = (
+            for route in routes
+            filter route.route_short_name == ${lineNumber}
+            return route.route_id)
+
+        let trip_ids_by_route_id = (
+          for trip in trips
+          filter trip.route_id in route_ids_by_short_name
+          return trip.trip_id)
+
+        let stop_ids_by_trip = (
+          for stop_time in stop_times
+          filter stop_time.trip_id in trip_ids_by_route_id
+          return stop_time.stop_id)
+
+        let parent_stations_by_line = (
+          for stop in stops
+          filter stop.stop_id in stop_ids_by_trip
+          return stop.parent_station)
+
+        let parent_stations_by_wheelchair_boarding = (
+          for stop in stops
+          filter (${wheelchairBoardingEnabled} || stop.wheelchair_boarding == 0)
+          and (!${wheelchairBoardingEnabled} || stop.wheelchair_boarding == 1)
+          return stop.parent_station)
+
+        let stops_by_search = (
+            for stop in (${query} ? fulltext(stops, "stop_name", concat("prefix:", ${query})) : stops)
+            return stop.stop_id
+        )
+
+        for stop in (${near} ? near("stops", ${currentPosition.latitude}, ${currentPosition.longitude}) : stops)
+        filter stop.location_type == 1
+        and (${search === undefined} || stop.stop_id in stops_by_search)
+        and (${line === ''} || stop.stop_id in parent_stations_by_line)
+        and (${wheelchairBoardingEnabled === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
+        limit ${from}, ${to - from + 1}
+        return stop.stop_id
+      `)
+      return yield cursor.map((stationId, index) => ({
+        path: [stations, near, nearEnabled, wheelchairBoarding, wheelchairBoardingEnabled, line, lineNumber, search, query, from + index],
+        value: {$type: 'ref', value: [stations, 'byId', stationId]}
+      }))
+    })
+  },
+  {
     route: 'stations.byId[{keys:ids}].routes[{keys}]',
     get: co.wrap(function* ([stations, byId, ids, routes, keys]) {
       const [{from, to} = {from: 0, to: -1}] = ranges(keys)

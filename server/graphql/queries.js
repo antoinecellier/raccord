@@ -20,12 +20,17 @@ export const resolvers = {
       const wheelchairBoardingBool = isBoolean(wheelchairBoarding) ? wheelchairBoarding : false;
 
       // Laboratoire d'informatique de Grenoble (Snowcamp)
-      const currentPosition = { latitude: 45.19228, longitude: 45.19228}
+      const currentPosition = { latitude: 45.19228, longitude: 5.7650086}
       return db().query(
         aql`
+          let route_ids_by_short_name = (
+              for route in routes
+              filter route.route_short_name == ${line}
+              return route.route_id)
+
           let trip_ids_by_route_id = (
             for trip in trips
-            filter trip.route_id == ${line}
+            filter trip.route_id in route_ids_by_short_name
             return trip.trip_id)
 
           let stop_ids_by_trip = (
@@ -54,7 +59,6 @@ export const resolvers = {
           and (${search === undefined} || stop.stop_id in stops_by_search)
           and (${line === ''} || stop.stop_id in parent_stations_by_line)
           and (${wheelchairBoarding === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
-          sort stop.stop_name asc
           limit ${from}, ${length}
           return stop
         `

@@ -1,13 +1,13 @@
 import moment from 'moment'
 import db, {aql} from '../db'
 import Stop from './types/stop'
-import Station, { stationDbId } from './types/station'
+import Station from './types/station'
 
 const Query = `
   type Query {
     stations(search: String, from: Int!, length: Int!): [Station],
     favoriteStations(user: String!, from: Int!, length: Int!): [Station],
-    stops(stationId: String!, after: Int!, from: Int!, length: Int!): [Stop]
+    stops(stationId: String!, after: String!, from: Int!, length: Int!): [Stop]
   }
 `
 
@@ -49,7 +49,7 @@ export const resolvers = {
 
         let children_stops = (
           for stop in stops
-          filter stop.parent_station == ${stationDbId(stationId)}
+          filter stop.parent_station == ${stationId}
           return stop.stop_id)
 
         for stop_time in stop_times

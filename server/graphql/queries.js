@@ -8,7 +8,7 @@ const Query = `
   type Query {
     stations(search: String, line: String, wheelchairBoarding: Boolean, near: Boolean, from: Int!, length: Int!): [Station],
     favoriteStations(user: String!, from: Int!, length: Int!): [Station],
-    stops(stationId: String!, after: String!, from: Int!, length: Int!): [Stop]
+    stops(stationId: String!, after: String!, from: Int!, length: Int!): [StopTime]
   }
 `
 

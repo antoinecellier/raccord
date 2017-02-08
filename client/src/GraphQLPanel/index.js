@@ -25,6 +25,7 @@ export default class GraphQLPanel extends Component {
             }
             return rep
           })
+          .catch(err => this.props.onError(err))
       },
       handleQueryChanged: query => {
         console.debug('new GraphQL request entered:', parse(query))

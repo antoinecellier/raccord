@@ -18,14 +18,13 @@ export const resolvers = {
   Query: {
     stations (_, { search = '', line = '', wheelchairBoarding, near = false, from, length }) {
       const wheelchairBoardingBool = isBoolean(wheelchairBoarding) ? wheelchairBoarding : false;
-
-      // Laboratoire d'informatique de Grenoble (Snowcamp)
-      const currentPosition = { latitude: 45.19228, longitude: 5.7650086}
+      // Zenika Nantes
+      const currentPosition = {latitude: 47.21401, longitude: -1.558893}
       return db().query(
         aql`
           let route_ids_by_short_name = (
               for route in routes
-              filter route.route_short_name == ${line}
+              filter route.route_short_name == ${isNaN(line) ? line : Number(line)}
               return route.route_id)
 
           let trip_ids_by_route_id = (
@@ -59,6 +58,7 @@ export const resolvers = {
           and (${search === undefined} || stop.stop_id in stops_by_search)
           and (${line === ''} || stop.stop_id in parent_stations_by_line)
           and (${wheelchairBoarding === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
+          sort stop.stop_name, stop.stop_id asc
           limit ${from}, ${length}
           return stop
         `

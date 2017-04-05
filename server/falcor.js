@@ -30,7 +30,7 @@ const routes = [
       const cursor = yield db().query(aql`
         for stop in stops
         filter stop.location_type == 1
-        sort stop.stop_name asc
+        sort stop.stop_name, stop.stop_id asc
         limit ${from}, ${to - from + 1}
         return stop.stop_id
       `)
@@ -60,13 +60,13 @@ const routes = [
   {
     route: 'stations.near[{keys:nearEnabled}].wheelchairBoarding[{keys:wheelchairBoardingEnabled}].line[{keys:lineNumbers}].search[{keys:queries}][{ranges:indices}]',
     get: co.wrap(function* ([stations, near, [nearEnabled], wheelchairBoarding, [wheelchairBoardingEnabled], line, [lineNumber], search, [query], [{from, to}]]) {
-      // Laboratoire d'informatique de Grenoble (Snowcamp)
-      const currentPosition = { latitude: 45.19228, longitude: 5.7650086}
+      // Zenika Nantes
+      const currentPosition = {latitude: 47.21401, longitude: -1.558893}
 
       const cursor = yield db().query(aql`
         let route_ids_by_short_name = (
             for route in routes
-            filter route.route_short_name == ${lineNumber}
+            filter route.route_short_name == ${routeDbId(lineNumber)}
             return route.route_id)
 
         let trip_ids_by_route_id = (
@@ -97,9 +97,9 @@ const routes = [
 
         for stop in (${near} ? near("stops", ${currentPosition.latitude}, ${currentPosition.longitude}) : stops)
         filter stop.location_type == 1
-        and (${search === undefined} || stop.stop_id in stops_by_search)
-        and (${line === ''} || stop.stop_id in parent_stations_by_line)
-        and (${wheelchairBoardingEnabled === undefined} || stop.stop_id in parent_stations_by_wheelchair_boarding)
+        and stop.stop_id in stops_by_search
+        and stop.stop_id in parent_stations_by_line
+        and stop.stop_id in parent_stations_by_wheelchair_boarding
         limit ${from}, ${to - from + 1}
         return stop.stop_id
       `)
